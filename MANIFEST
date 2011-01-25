@@ -1,0 +1,30 @@
+CHANGELOG
+External/install.sh
+External/scorer/documentation/answer-format.txt
+External/scorer/documentation/documentation.txt
+External/scorer/documentation/scorescheme.txt
+External/scorer/examples/sampletask.key
+External/scorer/examples/sampletask.sensemap
+External/scorer/examples/sampletask.system.answers
+External/scorer/makefile
+External/scorer/README
+External/scorer/score.pl
+External/scorer/scorer2.c
+FDL.txt
+GPL.txt
+INSTALL
+lib/UMLS/SenseRelate.pm
+lib/UMLS/SenseRelate/ErrorHandler.pm
+lib/UMLS/SenseRelate/TargetWord.pm
+Makefile.PL
+MANIFEST			This list of files
+README
+samples/input-example.adjustment.sval2
+samples/input-example.nurse.plain
+samples/stoplist-nsp.regex
+t/access.t
+t/functions.t
+t/prgs.t
+utils/umls-senserelate-evaluation.pl
+utils/umls-senserelate.pl
+META.yml                                 Module meta-data (added by MakeMaker)
