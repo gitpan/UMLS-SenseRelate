@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.9 2011/01/23 19:28:01 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.12 2011/04/04 15:46:02 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style WSD
 #
@@ -50,7 +50,7 @@ use UMLS::SenseRelate::ErrorHandler;
 
 #  module handler variables
 my $umls         = "";
-my $measure      = "";
+my $mhandler      = "";
 my $errorhandler = "";
 
 #  senserelate options
@@ -59,6 +59,7 @@ my $stopregex     = undef;
 my $window        = undef;
 my $compound      = undef;
 my $trace         = undef;
+my $measure       = undef;
 
 local(*TRACE);
 
@@ -68,7 +69,7 @@ my $pkg = "UMLS::SenseRelate";
 
 use vars qw($VERSION);
 
-$VERSION = '0.01';
+$VERSION = '0.03';
 
 my $debug = 0;
 
@@ -106,8 +107,8 @@ sub new {
     }
 
     #  set the UMLS::Interface handler
-    $measure = $meashandler;
-    if(! defined $measure) { 
+    $mhandler = $meashandler;
+    if(! defined $mhandler) { 
 	my $str = "UMLS::Similarity measure handler not defined.";
 	$errorhandler->_error($pkg, $function, $str, 3);	
     }
@@ -161,8 +162,12 @@ sub assignSense {
 	foreach my $sense (@{$senseref}) { push @senses, $sense; }
     }
     else {
-	@senses = $umls->getAllConcepts($target);
-	#@senses = $umls->getConceptList($target);
+	if($measure=~/vector|lesk/) { 
+	    @senses = $umls->getDefConceptList($target);
+	}
+	else {
+	    @senses = $umls->getConceptList($target);
+	}
     }
 
     #  check to make certain there exists a possible sense other
@@ -179,7 +184,7 @@ sub assignSense {
 	
 	my $sensescore = 0; my $termcounter = 0;
 
-	if(defined $trace) { print TRACE " Processing sense $sense\n"; }
+	if(defined $trace) { print TRACE " Processing sense ($sense)\n"; }
 
 	foreach my $term (@terms) { 
 	    
@@ -199,7 +204,12 @@ sub assignSense {
 		if(defined $compound) { $term=~s/_/ /g; }
 
 		#  get the terms associated concepts
-		@cuis = $umls->getConceptList($term); 
+		if($measure=~/vector|lesk/) { 
+		    @cuis = $umls->getDefConceptList($term); 
+		}
+		else {
+		    @cuis = $umls->getConceptList($term); 
+		}
 	    }
 
 	    if(defined $trace) { 
@@ -218,8 +228,7 @@ sub assignSense {
 
 		#  otherwise go get it and then put it there
 		else { 
-		    
-		    $score = $measure->getRelatedness($sense, $cui); 
+		    $score = $mhandler->getRelatedness($sense, $cui); 
 		    $cache{$sense}{$cui} = $score;
 		}
 	
@@ -409,6 +418,7 @@ sub _setOptions {
     $window        = $params->{'window'};
     $compound      = $params->{'compound'};
     $trace         = $params->{'trace'};
+    $measure       = $params->{'measure'};
 
     #  set the stoplist
     if(defined $stoplist) { 
@@ -418,6 +428,11 @@ sub _setOptions {
     #  set the trace
     if(defined $trace) { 
 	open(TRACE, ">$trace") || die "Could not open trace file ($trace).\n";
+    }
+
+    #  set the measure
+    if(! (defined $measure)) { 
+	$measure = "path";
     }
 }
 
@@ -478,9 +493,16 @@ __END__
 
 =head1 NAME
 
-UMLS::SenseRelate - A suite of Perl modules that implement the
-senserelate word sense disambiguation algorithm using the semantic
-similarity and relatedness options from the UMLS::Similarity package.
+UMLS::SenseRelate::TargetWord - A Perl module that implement the
+target word word sense disambiguation using the sense relate wsd 
+algorithm based on the  semantic similarity and relatedness options 
+from the UMLS::Similarity package.
+
+=head1 DESCRIPTION
+
+This package provides an implementation of the senserelate word sense 
+disambiguation algorithm using the semantic similarity and relatedness 
+options from the UMLS::Similarity package.
 
 =head1 SYNOPSIS
 
@@ -492,6 +514,7 @@ similarity and relatedness options from the UMLS::Similarity package.
  my $umls        = "";
  my $meas        = "";
  my $senserelate = "";
+ my $params      = "";
 
  #  set interface     
  $option_hash{"t"} = 1;
@@ -503,11 +526,15 @@ similarity and relatedness options from the UMLS::Similarity package.
  $meas = UMLS::Similarity::path->new($umls);
 
  #  set senserelate
- $senserelate = UMLS::SenseRelate::TargetWord->new($umls, $meas);
+ $params{"measure"} = "path";
+ $senserelate = UMLS::SenseRelate::TargetWord->new($umls, $meas, \%params);
 
- #  assign sense to target word
- my $tw = "adjustment";
- my $instance = "Fifty-three percent of the subjects reported below average mar$
+#  set the target word
+ my $tw = "adjustment";        
+
+ #  provide an instance where the target word is in <head> tags
+ my $instance = "Fifty-three percent of the subjects reported below average ";
+    $instance .= "marital <head>adjustment</head>.";
 
  my ($hashref) = $senserelate->assignSense($tw, $instance, undef);
 
@@ -518,7 +545,7 @@ similarity and relatedness options from the UMLS::Similarity package.
     }
  }
  else {
-    print "Target wrod ($tw) has no senses.\n";
+    print "Target word ($tw) has no senses.\n";
  }
 
 =head1 INSTALL
@@ -569,7 +596,7 @@ http://search.cpan.org/dist/UMLS-Similarity/
 
 =head1 AUTHOR
 
-Bridget T McInnes <bthomson@cs.umn.edu>
+Bridget T McInnes <bthomson@umn.edu>
 Ted Pedersen <tpederse@d.umn.edu>
 
 =head1 COPYRIGHT

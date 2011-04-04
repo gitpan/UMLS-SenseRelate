@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::ErrorHandler
-# (Last Updated $Id: ErrorHandler.pm,v 1.1 2011/01/03 23:47:00 btmcinnes Exp $)
+# (Last Updated $Id: ErrorHandler.pm,v 1.2 2011/04/04 15:07:23 btmcinnes Exp $)
 #
 # Perl module that provides a perl interface to the
 # Unified Medical Language System (UMLS)
@@ -97,16 +97,13 @@ __END__
 
 =head1 NAME
 
-UMLS::SenseRelate::ErrorHandler - provides the error handeling for the modules 
-in the UMLS-SenseRelate package.
+UMLS::SenseRelate::ErrorHandler - A Perl module that provides the error 
+handeling for the modules in the UMLS-SenseRelate package.
 
 =head1 DESCRIPTION
 
-This package provides the error handeling for the modules 
-in the UMLS-SenseRelate package.
-
-For more information please see the UMLS::SenseRelate.pm 
-documentation. 
+This package provides the error handeling for the modules in the 
+UMLS-SenseRelate package.
 
 =head1 SYNOPSIS
 
@@ -193,3 +190,5 @@ this program; if not, write to
  The Free Software Foundation, Inc.,
  59 Temple Place - Suite 330,
  Boston, MA  02111-1307, USA.
+
+=cut

@@ -35,7 +35,7 @@
 
 package UMLS::SenseRelate;
 
-$VERSION = '0.01';
+$VERSION = '0.03';
 
 sub new
 {
@@ -58,7 +58,7 @@ __END__
 
 =head1 NAME
 
-UMLS::SenseRelate - A suite of Perl modules that implement the 
+UMLS::SenseRelate - A suit of Perl modules that implement the 
 senserelate word sense disambiguation algorithm using the semantic 
 similarity and relatedness options from the UMLS::Similarity package. 
 
@@ -73,6 +73,7 @@ similarity and relatedness options from the UMLS::Similarity package.
  my $umls        = "";
  my $meas        = "";
  my $senserelate = "";
+ my %params      = ();
  
  #  set interface     
  $option_hash{"t"} = 1;
@@ -84,11 +85,16 @@ similarity and relatedness options from the UMLS::Similarity package.
  $meas = UMLS::Similarity::path->new($umls);
 
  #  set senserelate
- $senserelate = UMLS::SenseRelate::TargetWord->new($umls, $meas); 
+ $params{"measure"} = "path";
 
- #  assign sense to target word
+ $senserelate = UMLS::SenseRelate::TargetWord->new($umls, $meas, \%params); 
+
+ #  set the target word
  my $tw = "adjustment";        
- my $instance = "Fifty-three percent of the subjects reported below average marital <head>adjustment</head>.";
+
+ #  provide an instance where the target word is in <head> tags
+ my $instance = "Fifty-three percent of the subjects reported below average ";
+    $instance .= "marital <head>adjustment</head>.";
 
  my ($hashref) = $senserelate->assignSense($tw, $instance, undef); 
 
@@ -99,7 +105,7 @@ similarity and relatedness options from the UMLS::Similarity package.
     }
  }
  else {
-    print "Target wrod ($tw) has no senses.\n";
+    print "Target word ($tw) has no senses.\n";
  }
 
 =head1 DESCRIPTION
@@ -121,7 +127,7 @@ and relatedness measure in the UMLS::Similarity package.
 
   You may also contact us directly if you prefer :
 
-      Bridget T. McInnes: bthomson at cs.umn.edu 
+      Bridget T. McInnes: bthomson at umn.edu 
 
       Ted Pedersen : tpederse at d.umn.edu
 

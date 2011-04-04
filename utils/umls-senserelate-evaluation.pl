@@ -62,6 +62,9 @@ tagset and the 2007 tagset available. You can find them here:
 
   http://wsd.nlm.nih.gov/collaboration.shtml
 
+=head3 --verbose
+
+Prints out accuracy information to STDOUT. 
 
 =head3 --version
 
@@ -148,7 +151,7 @@ use UMLS::Interface;
 use UMLS::SenseRelate::TargetWord;
 use Getopt::Long;
 
-eval(GetOptions( "version", "help", "sense=s", "debug")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "verbose", "help", "senses=s", "debug")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 0;
@@ -181,12 +184,11 @@ if(scalar(@ARGV) < 1) {
 
 my $log = shift;
 
-my %sensehash = ();
 my %answerhash = ();
 my %keyhash = ();
 
 &getInputFiles($log);
-
+&setSenses();
 &evaluateUsingScorer();
 
 #  evaluates the files in the log directory using the scorer program
@@ -197,6 +199,9 @@ sub evaluateUsingScorer {
     my $total_precision = 0; my $total_tw = 0;
     foreach my $tw (sort keys %answerhash) { 
 	
+	if($tw eq "sd") { next; }
+	if($tw eq "or") { next; }
+
 	my $answerfile = $answerhash{$tw};
 	my $keyfile    = $keyhash{$tw};
 	
@@ -218,6 +223,10 @@ sub evaluateUsingScorer {
 		$precision = $1;
 	    }
 	} close EVAL;
+	
+	if(defined $opt_verbose) { 
+	    print STDERR "$tw\t$precision\n";
+	}
 
 	$total_precision += $precision; $total_tw++;
     }
@@ -241,10 +250,10 @@ sub getInputFiles {
     foreach my $file (@files) { 
 
 	if($file=~/(.*?).answers/) { 
-	    my $tw = $1; $answerhash{$1} = $file;
+	    $answerhash{$1} = $file;
 	}
 	if($file=~/(.*?).key/) { 
-	    my $tw = $1; $keyhash{$1} = $file;
+	    $keyhash{$1} = $file;
 	}
     }
 }
@@ -252,7 +261,7 @@ sub getInputFiles {
 
 #  get the sense information from the choice files if the --sense option is defined
 sub setSenses {
-    
+
     if(! (defined $opt_senses)) { return; }
     
     if($debug) { print STDERR "In setSenses\n"; } 
@@ -278,13 +287,27 @@ sub setSenses {
     }
     
     foreach my $tw (sort keys %files) { 
-	open(FILE, $files{$tw}) || die "Could not open $file\n";
+	open(FILE, $files{$tw}) || die "Could not open --sense $file\n";
+	my %sensehsah = ();
 	while(<FILE>) {
 	    chomp;
 	    my($tag, $concept, $semantics, $cui) = split/\|/;
-	    $sensehash{$tw}{$tag} = $cui;
-	}
-	close FILE;
+	    $sensehash{$tag} = $cui; 
+	}close FILE;
+
+	my $keyfile    = $keyhash{$tw};	
+	my $nkeyfile   = $keyfile . ".sense";
+	open(KEY, "$log/$keyfile") || die "Could not open key $log/$keyfile\n";
+	open(NKEY, ">$log/$nkeyfile") || die "Could not open key $log/$nkeyfile\n";
+	while(<KEY>) { 
+	    chomp;
+	    $_=~/(M[0-9]+)$/; 
+	    my $tag = $1;
+	    my $cui = $sensehash{$tag};
+	    $_=~s/\%$tag/\%$cui/g;
+	    print NKEY "$_\n";
+	} close KEY; close NKEY;
+	$keyhash{$tw} = $nkeyfile;
     }
 }
 
@@ -311,6 +334,8 @@ sub showHelp() {
 
     print "--senses FILE|DIR        File or directory containing the sense files\n\n";
     
+    print "--verbose                Prints accuracy information to STDOUT\n\n";
+
     print "--version                Prints the version number\n\n";
     
     print "--help                   Prints this help message.\n\n";
@@ -321,7 +346,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-senserelate-evaluation.pl,v 1.2 2011/01/23 19:28:01 btmcinnes Exp $';
+    print '$Id: umls-senserelate-evaluation.pl,v 1.3 2011/04/04 15:07:23 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
 }
 

@@ -447,7 +447,7 @@ use UMLS::Interface;
 use UMLS::SenseRelate::TargetWord;
 use Getopt::Long;
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "compound", "trace=s")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 1;
@@ -832,6 +832,8 @@ sub load_UMLS_SenseRelate {
     if(defined $opt_stoplist) { $option_hash{"stoplist"} = $opt_stoplist; }
     if(defined $opt_trace)    { $option_hash{"trace"}    = $opt_trace;    }
 
+    $option_hash{"measure"} = $measure;
+
     my $handler = UMLS::SenseRelate::TargetWord->new($umls, $meas, \%option_hash); 
     die "Unable to create UMLS::Interface object.\n" if(!$handler);
     
@@ -958,6 +960,9 @@ sub load_UMLS_Interface {
     }
     if(defined $opt_realtime) {
 	$option_hash{"realtime"} = $opt_realtime;
+    }
+    if(defined $opt_undirected) { 
+	$options_hash{"realtime"} = $opt_undirected;
     }
     if(defined $opt_icpropagation) {
 	$option_hash{"icpropagation"} = $opt_icpropagation;
@@ -1147,11 +1152,14 @@ sub setOptions {
     if(defined $opt_key) { $set .= "  --key\n"; }
 
     $log = "log";
-    if(defined $opt_log) { $set     .= "  --log $opt_log\n"; }
-    else                 { $default .= "  --log $log\n"; }
+    if(defined $opt_log) { 
+	$set .= "  --log $opt_log\n"; 
+	$log  = $opt_log;
+    }
+    else { $default .= "  --log $log\n"; }
 
     if(-e $log) { 
-	print STDERR "The output directory $log already exists!";
+	print STDERR "The log directory ($log) already exists!";
 	print STDERR "Overwrite (Y/N)? ";
 	$reply = <STDIN>;
 	chomp $reply;
@@ -1252,6 +1260,10 @@ sub setOptions {
     else {
 	$measure  = "path";
 	$set     .= "  --measure $measure\n";
+    }
+
+    if(defined $opt_undirected) { 
+	$set .= "  --undirected\n";
     }
 
     if(defined $opt_icpropagation) {
@@ -1411,7 +1423,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-senserelate.pl,v 1.3 2011/01/23 19:28:01 btmcinnes Exp $';
+    print '$Id: umls-senserelate.pl,v 1.5 2011/04/04 15:40:42 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
 }
 
