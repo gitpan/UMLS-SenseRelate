@@ -1,9 +1,14 @@
 NAME
     UMLS::SenseRelate CHANGES
 
+  version 0.07
+    1. modified the version information in the .pm modules
+
   version 0.05
     1. added an AllWords.pm module with a corresponding
     umls-allwords-senserelate.pl program.
+
+    2. added converter programs in the coverters/ directory
 
   version 0.03
     1. modified how the CUIs were obtained when using the vector or lesk

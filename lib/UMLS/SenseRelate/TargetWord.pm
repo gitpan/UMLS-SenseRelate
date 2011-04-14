@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.14 2011/04/13 15:43:44 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.15 2011/04/14 12:51:57 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -66,8 +66,6 @@ local(*TRACE);
 my %cache = ();
 
 my $pkg = "UMLS::SenseRelate::TargetWord";
-
-use vars qw($VERSION);
 
 my $debug = 0;
 
@@ -465,14 +463,6 @@ sub _setStopList {
     $regex .= ")";
     
     return $regex;
-}
-
-#  returns the version of the UMLS currently being used
-#  input :
-#  output: $version <- string containing version
-sub _version {
-
-    return $VERSION;
 }
 
 #  print out the function name to standard error

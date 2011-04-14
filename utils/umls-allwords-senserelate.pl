@@ -1252,7 +1252,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-allwords-senserelate.pl,v 1.3 2011/04/13 15:43:44 btmcinnes Exp $';
+    print '$Id: umls-allwords-senserelate.pl,v 1.4 2011/04/14 12:51:57 btmcinnes Exp $';
     print "\nCopyright (c) 2011, Ted Pedersen & Bridget McInnes\n";
 }
 

@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::AllWords
-# (Last Updated $Id: AllWords.pm,v 1.2 2011/04/12 21:16:41 btmcinnes Exp $)
+# (Last Updated $Id: AllWords.pm,v 1.3 2011/04/14 12:51:57 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style WSD
 #
@@ -69,8 +69,6 @@ local(*TRACE);
 my %cache = ();
 
 my $pkg = "UMLS::SenseRelate::AllWords";
-
-use vars qw($VERSION);
 
 my $debug = 0;
 
@@ -278,14 +276,6 @@ sub assignSenses {
     }
 
     return @assignments;
-}
-
-#  returns the version of the UMLS currently being used
-#  input :
-#  output: $version <- string containing version
-sub _version {
-
-    return $VERSION;
 }
 
 #  print out the function name to standard error

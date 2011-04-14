@@ -292,7 +292,7 @@ sub showHelp() {
 
 #  function to output the version number
 sub showVersion {
-        print '$Id: mm-xml2aw-xml.pl,v 1.1 2011/04/13 15:43:44 btmcinnes Exp $';
+        print '$Id: mm-xml2aw-xml.pl,v 1.2 2011/04/14 12:51:57 btmcinnes Exp $';
         print "\nCopyright (c) 2007, Ted Pedersen & Bridget McInnes\n";
 }
 
