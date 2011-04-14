@@ -1,20 +1,20 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.12 2011/04/04 15:46:02 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.14 2011/04/13 15:43:44 btmcinnes Exp $)
 #
-# Perl module that performs SenseRelate style WSD
+# Perl module that performs SenseRelate style target word WSD
 #
 # Copyright (c) 2010-2011,
 #
-# Bridget T. McInnes, University of Minnesota Twin Cities
+# Bridget T. McInnes, University of Minnesota, Twin Cities
 # bthomson at umn.edu
 # 
-# Serguei Pakhomov, University of Minnesota Twin Cities
+# Serguei Pakhomov, University of Minnesota, Twin Cities
 # pakh0002 at umn.edu
 #
 # Ted Pedersen, University of Minnesota, Duluth
 # tpederse at d.umn.edu
 #
-# Ying Liu, University of Minnesota
+# Ying Liu, University of Minnesota, Twin Cities
 # liux0935 at umn.edu
 #
 # This program is free software; you can redistribute it and/or
@@ -65,11 +65,9 @@ local(*TRACE);
 
 my %cache = ();
 
-my $pkg = "UMLS::SenseRelate";
+my $pkg = "UMLS::SenseRelate::TargetWord";
 
 use vars qw($VERSION);
-
-$VERSION = '0.03';
 
 my $debug = 0;
 
@@ -309,8 +307,6 @@ sub _getWindow {
 	my $str = "Instance ($instance) not in proper format.";
 	$errorhandler->_error($pkg, $function, $str, 5);
     }
-
-
     
     #  get the words or CUIs surrounding the target word
     $instance=~/^(.*?)<head item=\"(.*?)\" instance=\"(.*?)\">(.*?)<\/head>(.*?)$/;
@@ -602,16 +598,16 @@ Ted Pedersen <tpederse@d.umn.edu>
 =head1 COPYRIGHT
 
  Copyright (c) 2010-2011
- Bridget T. McInnes, University of Minnesota
+ Bridget T. McInnes, University of Minnesota, Twin Cities
  bthomson at umn.edu
 
- Ted Pedersen, University of Minnesota Duluth
+ Ted Pedersen, University of Minnesota, Duluth
  tpederse at d.umn.edu
 
- Serguei Pakhomov, University of Minnesota Twin Cities
+ Serguei Pakhomov, University of Minnesota, Twin Cities
  pakh0002 at umn.edu
 
- Ying Liu, University of Minnesota
+ Ying Liu, University of Minnesota, Twin Cities
  liux0935 at umn.edu
 
 This program is free software; you can redistribute it and/or modify it under

@@ -4,18 +4,20 @@
 
 =head1 NAME
 
-umls-senserelate.pl - This program determines the correct sense 
-of an ambiguous term using semantic similarity measures.
+umls-allwords-senserelate.pl - This program performs all-words word sense 
+disambiguation and assigns senses from the UMLS to each ambiguous term in 
+a runnning text using semantic similarity measures.
 
 =head1 SYNOPSIS
 
-This program assigns senses from the UMLS or a given sense 
-file to ambiguous terms using semantic simlarity or relatedness
-measures from the UMLS::Similarity package. 
+umls-allwords-senserelate.pl - This program performs all-words word sense 
+disambiguation and assigns senses from the UMLS to each ambiguous term in 
+a runnning text using semantic similarity or relatedness measures from the 
+UMLS::Similarity package.
 
 =head1 USAGE
 
-Usage: umls-senserelate.pl [OPTIONS] INPUTFILE
+Usage: umls-allwords-senserelate.pl [OPTIONS] INPUTFILE
 
 =head2 OUTPUT
 
@@ -26,63 +28,49 @@ the directory defined by the --log option.
 
 =head3 INPUTFILE 
 
-Input file either in sval2 or plain format. Indicated by 
-the --sval2 or --plain options respectively. The --plain 
-option is the default.
+Input file either in all-words xml format indicated by the --awxml 
+option (which is also the default).
 
 =head2 General Options:
 
-=head3 --plain
+=head3 --awxml
 
-The input format is in plain text. This is the default format. 
+The input format is all-words xml, similar to what is found in the 
+all-words disambiguating semeval task. This is the default format. 
 
-In plain format each line of the text files contains a single 
-context  where the ambiguous word is identified by:
+In this format each line of the text files contains a single word
+where the words to be disabugated are identified by:
 
-<head item="target word" instance="id" sense="sense">word</head>.
+  <head id="id">word</head>.
+
+And the context is encapsulated in text tags <text id="id"> ... </text>
 
 For example: 
 
-Paul was named <head item="art" instance="art.30002" sense="art">Art</head> magazine's top collector.
+  <text id="d000">
+  That
+  <head id="d000.s000.t001">is</head>
+  what
+  the
+  <head id="d000.s000.t004">man</head>
+  had
+  <head id="d000.s000.t006">said</head>
+  .
+  Haney
+  <head id="d000.s001.t001">peered</head>
+  at
+  his
+  <head id="d000.s001.t005">drinking</head>
+  <head id="d000.s001.t006">companion</head>
+  doubtfully 
+  .
+  </text>
 
-The sense information is optional. If you do not have the sense information 
-either leave it blank such as:
+Please note that the following id format is required: 
 
-Paul was named <head item="art" instance="art.30002" sense="">Art</head> magazine's top collector.
-
-or do not include the sense tag such as:
-
-Paul was named <head item="art" instance="art.30002">Art</head> magazine's top collector.
-
-If the sense information is not there, then you can not use the --key FILE option
-
-=head3 --sval2
-
-The format is in sval2 format
-
-=head3 --senses DIR|File
-
-This is the directory that contains the the sense file for each target 
-word you are going to disambiguate or just the file itself. 
-
-The files for the target word contains the possible senses of the target 
-word. 
-
-This may be temporary but right now this is who I have it because often 
-times the possible senses change depending on the version of the UMLS that 
-you are using. I felt this allowed the most flexibility with it. 
-
-The naming convention for this is a file called: <target word>.choices
-
-The format for this file is:
-
-    <tag>|<target word name>|semantic type|CUI
-
-This format is based on the choice files in the NLM-WSD dataset which 
-we use for our experiments. If you are using the NLM-WSD dataset you
-can download these choice files from NLM's site. There are the 1999 
-tagset and the 2007 tagset available.
-
+  d[0-9]+ refers to the document id
+  s[0-9]+ refers to the sentence number in the document
+  t[0-9]+ refers to the term number in the sentence 
 
 =head3 --log DIR
 
@@ -100,6 +88,25 @@ these are indicated by an underscore. For example:
 
 Stores the gold standard information in the <target word>.key file to be 
 used in the evaluation programs. This file is stored in the log directory. 
+
+To use this option, the input text must contain the key information in 
+the following format:
+  
+   <head id="id" sense="sense">target word</head>
+
+For example:
+
+   <head id="d000.s001.t006" sense="C0000000">companion</head>
+
+=head3 --senses
+
+The sense information is embedded in the inputfile i the following format:
+
+  <head id="id" candidates="sense1,sense2,sense3">target word</head>
+
+For example:
+
+  <head id="d001.s001.t001" candidates="C1280500,C2348382">effect</head>
 
 =head3 --window NUMBER
 
@@ -123,11 +130,10 @@ available measure are:
 
 =head3 --stoplist FILE
 
-A file containing a list of words to be excluded. This is used in the 
-UMLS::SenseRelate::TargetWord module as well as the vector and lesk 
-measures in the UMLS::Similarity package. The format required is one 
-stopword per line, words are in regular expression format. 
-
+A file containing a list of words to be excluded. This is used in 
+the UMLS::SenseRelate::TargetWord module as well as the vector and 
+lesk measures in the UMLS::Similarity package. The format required 
+is one stopword per line, words are in regular expression format. 
 For example:
 
   /\b[a-zA-Z]\b/
@@ -149,6 +155,7 @@ This stores the trace information in FILE for debugging purposes.
 =head3 --version
 
 Displays the version information.
+
 
 =head3 --help
 
@@ -270,7 +277,6 @@ where probability is the probability of the concept occurring.
 
 See create-icpropagation.pl for more information.
 
-
 =head2 UMLS-Similarity Vector Measure Options:
 
 =head3 --vectormatrix FILE
@@ -292,7 +298,6 @@ with the --measure option.
 This file is generated by the vector-input.pl program. An example 
 of this file can be found in the samples/ directory and is called 
 index.
-
 
 =head3 --debugfile FILE
 
@@ -334,16 +339,16 @@ There are three different option configurations that you have with the
 
 1. No --dictfile - which will use the UMLS definitions
 
-  umls-senserelate.pl --measure lesk hand foot
+  umls-allwords-senserelate.pl --measure lesk hand foot
 
 2. --dictfile - which will just use the dictfile definitions
 
-  umls-senserelate.pl --measure lesk --dictfile samples/dictfile hand foot
+  umls-allwords-senserelate.pl --measure lesk --dictfile samples/dictfile hand foot
 
 3. --dictfile + --config - which will use both the UMLS and dictfile 
 definitions
 
-  umls-senserelate.pl --measure lesk --dictfile samples/dictfile --config
+  umls-allwords-senserelate.pl --measure lesk --dictfile samples/dictfile --config
   configuration hand foot
 
 Keep in mind, when using this file with the --config option, if 
@@ -400,7 +405,7 @@ set, definition words are stemmed using the Lingua::Stem::En module.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010,
+Copyright (c) 2010-2011
 
  Bridget T. McInnes, University of Minnesota Twin Cities
  bthomson at umn.edu
@@ -441,18 +446,18 @@ this program; if not, write to:
 #                            COMMAND LINE OPTIONS AND USAGE
 #                           ================================
 
-
 use UMLS::Interface;
-use UMLS::SenseRelate::TargetWord;
+use UMLS::SenseRelate::AllWords;
 use Getopt::Long;
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses", "awxml", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 1;
 
 #  if help is defined, print out help
 if( defined $opt_help ) {
+    
     $opt_help = 1;
     &showHelp();
     exit;
@@ -479,9 +484,7 @@ my $precision    = "";
 my $floatformat  = "";
 my $measure      = "";
 my $window       = "";
-my %sensehash    = ();
 my %instancehash = ();
-my %keyhash      = ();
 
 #  check and set the options
 &checkOptions       ();
@@ -492,12 +495,6 @@ my %keyhash      = ();
 my $umls        = &load_UMLS_Interface();
 my $meas        = &load_UMLS_Similarity();
 my $senserelate = &load_UMLS_SenseRelate();
-
-
-#  get the senses
-if(defined $opt_senses) {
-   &setSenses();
-}
 
 #  get the instances
 &setInput($source);
@@ -512,7 +509,7 @@ if(defined $opt_key) {
 print STDERR "The results will be found in the $log directory\n";
 
 #########################################################################################
-##  SUB FUnCTIONS
+##  SUB FUNCTIONS
 #########################################################################################
 
 #  gets the input data and loads the instances in to the instance hash
@@ -533,9 +530,7 @@ sub setInput() {
 
     #  load the input into the instance hash
     foreach my $inputfile (@inputfiles) { 
-
-	if(defined $opt_sval2) { &load_Sval2_Input($inputfile); }
-	else                   { &load_Plain_Input($inputfile); }
+	&load_XML_Input($inputfile); 
     }
 }
 
@@ -543,282 +538,118 @@ sub setInput() {
 #  the UMLS::SenseRelate::TargetWord  module
 sub assignSenses {
 
-    if($debug) { print "In assignSenses\n"; }
+    if($debug) { print STDERR "In assignSenses\n"; }
     
-    foreach my $tw (sort keys %instancehash) { 
+    foreach my $id (sort keys %instancehash) { 
 	
-	if($debug) { print STDERR "  Assigning sense for $tw\n"; }
+	if($debug) { print STDERR "  Assigning senses to instance $id\n"; }
+
+	#  get the context
+	my @context = @{$instancehash{$id}}; 
+	
+	#  assign the senses to the terms
+	my @assignments = $senserelate->assignSenses(\@context);
+
 
 	#  open the log files
-	open(ANSWERS, ">$log/$tw.answers") || die "Could not open $log/$tw.answers\n"; 
-
-	#  get the possible senses for the target words
-	my @senses = (); 
-	
-	if(defined $opt_senses) {
-	    foreach my $sense (sort keys %{$sensehash{$tw}}) { 
-		push @senses, $sense; }
-	}
-	
-	#  loop through the instances and assign each of them a sense
-	my $tp = 0; my $tn = 0;
-	foreach my $id (sort keys %{$instancehash{$tw}}) {
-	
-	    my $instance = $instancehash{$tw}{$id};
-	    
-	    my $hashref = undef;
-	    if(defined $opt_senses) {
-		($hashref) = $senserelate->assignSense($tw, $instance, \@senses);
-	    }
-	    else { 
-		($hashref) = $senserelate->assignSense($tw, $instance, undef);
-	    }
-	    
-	    if(defined $hashref) {
-		
-		foreach my $sense (sort keys %{$hashref}) { 
-		    my $score = sprintf $floatformat, ${$hashref}{$sense};
-		    print ANSWERS "$tw $id $tw%$sense\n";
-		}
-
-	    }
+	open(ANSWERS, ">$log/$id.answers") || die "Could not open $log/$id.answers\n"; 
+       	foreach my $element (@assignments) { 
+	    print ANSWERS "$id $element\n";
 	}
 	close ANSWERS;
     }
 }
 
-#  loads the instances in sval2 format in to the instance hash
-sub load_Sval2_Input {
-
-    my $inputfile = shift;
-
-    if($debug) { print STDERR "In load_Sval2_Input for $inputfile\n"; }
-    
-    #  open the input file
-    open(INPUT, $inputfile) || die "Could not open input file: $inputfile\n";
-        
-    #  get the instance and instance information
-    my $tw = ""; my $id = ""; my $sense = ""; my $instance = ""; my $formatcheck = 1;
-    while(<INPUT>) { 
-	chomp;
-
-	#  check format
-	if($_=~/<corpus lang/) { $formatcheck = 0; }
-	if($_=~/<token word/)  { $formatcheck = 2; }
- 
-	#  get the target word
-	if($_=~/lexelt item=\"(.*?)\">/) { $tw = $1; }
-
-	# get the instance id
-	if($_=~/<instance id=\"(.*?)\"/) { $id = $1; }
-	
-	#  get the sense
-	if($_=~/senseid=\"(.*?)\"\/>/) { $sense = $1; }
-	
-	#  set the context flag on
-	if($_=~/<context>/)   { $contextflag = 1; }
-	
-	#  get the context if the flag is set
-	if($contextflag == 1) { $instance .= $_; }
-
-	#  set the context flag off
-	if($_=~/<\/context>/) { $contextflag = 0; }
-	
-	#  load the information in the instance hash
-	if($_=~/<\/instance>/) {
-	   	    
-	    #  check we obtained all of the required infromation 
-	    if($tw eq "") { 
-		print STDERR "\nERROR: The item information is missing.\n";
-		print STDERR "$_\n\n";
-		&minimalUsageNotes();
-		exit;
-	    }
-	    if($id eq "") { 
-		print STDERR "\nERROR: The instance id information is missing from instance.\n";
-		print STDERR "$_\n\n";
-		&minimalUsageNotes();
-		exit;
-	    }
-
-	    #  remove the <context> <title> and <local> tags	    
-	    $instance=~s/<context>//g; $instance=~s/<\/context>//g;
-	    $instance=~s/<local>//g;   $instance=~s/<\/local>//g;
-	    $instance=~s/<title>//g;   $instance=~s/<\/title>//g;
-
-	    #  set the header information
-	    my $header = " <head item=\"$tw\" instance=\"$id\">$tw<\/head> ";
-
-	    #  replace the current head information with the new
-	    $instance=~s/<head>(.*?)<\/head>/$header/;
-
-	    #  get rid of possible white spaces that were introduced
-	    $instance=~s/\s+/ /g;  $instance=~s/^\s*//g; $instance=~s/\s*$//g;
-	    
-	    #  store the instance
-	    $instancehash{$tw}{$id} = $instance;
-	
-	    #  if the --key option is defined print out the key information
-	    if(defined $opt_key) { 
-		if($sense eq "")  { 
-		    print STDERR "\nERROR There is no sense information for instance $id.\n";
-		    print STDERR "The --key FILE option can only be used when the sense\n";
-		    print STDERR "information is embedded in the sval2 format.\n\n";
-		    &minimalUsageNotes();
-		    exit;
-		}
-		$keyhash{$tw}{$id} = "$tw%$sense";
-	    }
-	    
-	    #  reset the variables
-	    $id = ""; $instance = ""; $sense = ""; 
-	}
-    }
-    
-    #  double check if the format was correct
-    if($formatcheck > 0) { 
-	print STDERR "\nERROR: This does not look like sval2 format. \n";
-	print STDERR "Please check the format of your input file.\n\n";
-	&minimalUsageNotes();
-	exit;
-    }
-
-}
-
 #  loads the instances in plain format in to the instance hash
-sub load_Plain_Input {
+sub load_XML_Input {
 
     my $inputfile = shift;
-
+    
     if($debug) { print STDERR "In loadPlainInput for $inputfile\n"; }
     
     #  open the input file
     open(INPUT, $inputfile) || die "Could not open input file: $inputfile\n";
-        
+    
     #  get the instance and instance information
-    my $tw = ""; my $id = ""; my $sense = ""; 
+    my $id = ""; my @ontext = ();
     while(<INPUT>) { 
 	chomp;
 	
-	if($_=~/<corpus lang/) { 
-	    print STDERR "\nERROR. This does not look like plain format.\n";
-	    print STDERR "Please check the format of your input file.\n\n";
-	    &minimalUsageNotes();
-	    exit;
-	}
-	    
-	my $before = "";	my $tw     = "";	
-	my $id     = "";        my $sense  = "";	
-	my $after  = "";
-	
-	if($_=~/^(.*?)<head item=\"(.*?)\" instance=\"(.*?)\" sense=\"(.*?)\">(.*?)<\/head>(.*?)$/) { 
-	    $before = $1;	    $tw     = $2;
-	    $id     = $3;	    $sense  = $4;
-	    $after  = $6;
-	}
-	elsif($_=~/^(.*?)<head item=\"(.*?)\" instance=\"(.*?)\">(.*?)<\/head>(.*?)$/) { 
-	    $before = $1;	    $tw     = $2;
-	    $id     = $3;	    $after  = $5;
-	}
-	else { 
-	    print STDERR "\nERROR: The instance does not have any header information\n";
-	    print STDERR "$_\n\n";
-	    &minimalUsageNotes();
-	    exit;
+	if($_=~/^\s*$/)        { next; }
+	if($_=~/<\?xml/)       { next; }
+	if($_=~/<\!DOCTYPE/)   { next; }
+	if($_=~/<corpus lang/) { next; }
+	if($_=~/<\/corpus>/)   { next; }
+
+	if($_=~/<text id=\"(.*?)\"/) { $id = $1; next; }
+	if($_=~/<\/text>/) { 
+	    $instancehash{$id} = [@context];
+	    $id = ""; @context = (); next;
 	}
 
-	#  check all of the required information is there
-	if($tw eq "") { 
-	    print STDERR "\nERROR: The item information is missing from instance.\n";
-	    print STDERR "$_\n\n";
-	    &minimalUsageNotes();
-	    exit;
-	}
-	if($id eq "") { 
-	    print STDERR "\nERROR: The instance information is missing from instance.\n";
-	    print STDERR "$_\n\n";
-	    &minimalUsageNotes();
-	    exit;
-	}
-	    	    
-	#  reset the instance with out the sense information if it is there
-	my $instance = $before . " <head item=\"$tw\" instance=\"$id\">$tw<\/head> " . $after;
-
-	#  send the instance to 
-	$instance=~s/\s+/ /g;	$instance=~s/^\s*//g;	$instance=~s/\s*$//g;
 	
-	$instancehash{$tw}{$id} = $instance;
-	
-	#  if the --key option is defined print out the key information
-	if(defined $opt_key) { 
-	    if($sense eq "")  { 
-		print STDERR "\nERROR There is no sense information for instance $id.\n";
-		print STDERR "The --key FILE option can only be used when the sense\n";
-		print STDERR "information is embedded in the plain text format.\n\n";
-		&minimalUsageNotes();
-		exit;
+	if(defined $opt_senses) { 
+	    if($_=~/<head id=/) { 
+		if(! ($_=~/candidates=\"(.*?)\"/)) { 
+		    print STDERR "\nERROR. This instance does not contain the candidate senses.\n";
+		    print STDERR "Instance: $_\n";
+		    print STDERR "Please check the format of your input file.\n\n";
+		    &minimalUsageNotes();
+		    exit;
+		}                  
 	    }
-	    $keyhash{$tw}{$id} = "$tw%$sense";
-	}
+	}            
+	push @context, $_; 
     }
 }
 
-    #  open the key file if defined and print out the key information
 sub setKey {
 
     if(! (defined $opt_key)) { next; }
 
     if($debug) { print STDERR "In setKey\n"; }
 
-    foreach my $tw (sort keys %keyhash) { 
-	open(KEY, ">$log/$tw.key") || 
-	    die "Could not open key ($log/$tw.key) file\n";
-	foreach my $id (sort keys %{$keyhash{$tw}}) { 
-	    print KEY "$tw $id $keyhash{$tw}{$id}\n";
+    foreach my $id (sort keys %instancehash) { 
+	
+	if($debug) { print STDERR "  Setting key for instance $id\n"; }
+
+	foreach my $id (sort keys %instancehash) { 
+	    
+	    #  open the key file
+	    open(KEY, ">$log/$id.key") || 
+		die "Could not open key ($log/$id.key) file\n";
+	
+	    #  get the context
+	    my @context = @{$instancehash{$id}}; 
+	    
+	    #  loop through the context and print the key
+	    foreach $element (@context) {
+		if($element=~/<head/) { 
+		    $element=~/<head id=\"(.*?)\"/;
+		    my $tid    = $1;
+		    $element=~/>(.*?)</;
+		    my $tw    = $1;
+		    if($element=~/sense=\"(.*?)\"/) { 
+			my $sense = $1;
+			print KEY "$id $tid $tw\%$sense\n";
+		    }
+		    else {
+			print STDERR "\nERROR. This instance does not contain sense information\n";
+			print STDERR "Instance: $element\n";
+			print STDERR "Please check the format of your input file\n\n";
+			&minimalUsageNotes();
+			exit;
+		    }
+
+		    
+		    
+		} 
+	    } close KEY;
 	}
-	close KEY;
     }
 }
 
-#  get the sense information from the choice files if the --sense option is defined
-sub setSenses {
-    
-    if(! (defined $opt_senses)) { return; }
-    
-    if($debug) { print STDERR "In setSenses\n"; } 
-     
-    my %files = ();
-    if(-d $opt_senses) {
-	opendir(DIR, $opt_senses) || die "Could not open $opt_senses directory\n";
-	my @dirs = grep { $_ ne '.' and $_ ne '..' and $_ ne "CVS" and 
-			  $_ ne "raw_summary" and $_ ne "index.shtml"} 
-	readdir DIR;
-	foreach my $file (@dirs) { 
-	    $file=~/(.*?)\.choices/;	    
-	    my $tw = $1;
-	    $files{$tw} = "$opt_senses/$file";
-	}
-    }
-    else { 
-	my @array = split/\//, $opt_senses;
-	my $file  = $array[$#array];
-	$array[$#array]=~/(.*?)\.choices/;	
-	my $tw = $1; 
-	$files{$tw} = $opt_senses;
-    }
-    
-    foreach my $tw (sort keys %files) { 
-	open(FILE, $files{$tw}) || die "Could not open $file\n";
-	while(<FILE>) {
-	    chomp;
-	    my($tag, $concept, $semantics, $cui) = split/\|/;
-	    $sensehash{$tw}{$cui}++;
-	}
-	close FILE;
-    }
-}
-
-#  load the UMLS-SenseRelate package
+#  load the Umls-Allwords-Senserelate package
 sub load_UMLS_SenseRelate {
 
     if($debug) { print STDERR "In load_UMLS_SenseRelate\n"; }
@@ -830,11 +661,12 @@ sub load_UMLS_SenseRelate {
     if(defined $opt_compound) { $option_hash{"compound"} = $opt_compound; }
     if(defined $opt_stoplist) { $option_hash{"stoplist"} = $opt_stoplist; }
     if(defined $opt_trace)    { $option_hash{"trace"}    = $opt_trace;    }
+    if(defined $opt_senses)   { $option_hash{"senses"}   = $opt_senses;   }
 
     $option_hash{"measure"} = $measure;
 
-    my $handler = UMLS::SenseRelate::TargetWord->new($umls, $meas, \%option_hash); 
-    die "Unable to create UMLS::SenserRelateTargetWord object.\n" if(!$handler);
+    my $handler = UMLS::SenseRelate::AllWords->new($umls, $meas, \%option_hash); 
+    die "Unable to create UMLS::Interface object.\n" if(!$handler);
     
     return $handler;
     
@@ -1139,14 +971,13 @@ sub setOptions {
     my $set     = "";
     my $default = "";
 
-    $default .= "\numls-senserelate.pl Default Options:\n";
+    $default .= "\numls-allwords-senserelate.pl Default Options:\n";
     
-    #  umls-senserelate.pl options
-    $set .= "\numls-senserelate.pl Specific Options:\n";
+    #  umls-allwords-senserelate.pl options
+    $set .= "\numls-allwords-senserelate.pl Specific Options:\n";
 
-    if(defined $opt_sval2)    { $set .= "  --sval2\n";     }
-    elsif(defined $opt_plain) { $set .= "  --plain\n";     }
-    else                      { $default .= "  --plain\n"; }
+    if(defined $opt_awxml)  { $set .= "  --awxml\n";     }
+    else                    { $default .= "  --awxml\n"; }
 
     if(defined $opt_key) { $set .= "  --key\n"; }
 
@@ -1180,8 +1011,9 @@ sub setOptions {
     #  UMLS::SenseRelate Options
     $set .= "\nUMLS::SenseRelate Specific Options:\n";
    
-    if(defined $opt_senses)   { $set .= "  --senses $opt_senses\n";     }    
     if(defined $opt_stoplist) { $set .= "  --stoplist $opt_stoplist\n"; }
+    
+    if(defined $opt_senses) { $set .= "  --senses\n"; }
 
     if(defined $opt_window)   { 
 	$window = $opt_window;
@@ -1311,7 +1143,7 @@ sub setOptions {
 ##############################################################################
 sub minimalUsageNotes {
     
-    print "Usage: umls-senserelate.pl [OPTIONS] INPUTFILE\n";
+    print "Usage: umls-allwords-senserelate.pl [OPTIONS] INPUTFILE\n";
     &askHelp();
     exit;
 }
@@ -1323,15 +1155,11 @@ sub showHelp() {
         
     print "This is a utility \n";
   
-    print "Usage: umls-senserelate.pl [OPTIONS] INPUTFILE\n\n";
+    print "Usage: umls-allwords-senserelate.pl [OPTIONS] INPUTFILE\n\n";
     
     print "\n\nGeneral Options:\n\n";
 
-    print "--plain                  INPUTFILE is in plain format. Default\n\n";
-    
-    print "--sval2                  INPUTFILE is in sval2 format.\n\n";
-    
-    print "--senses FILE|DIR        File or directory containing the sense files\n\n";
+    print "--awxml                  The input format is all-words xml (DEFAULT).\n\n";
 
     print "--measure MEASURE        The measure to use to calculate the\n";
     print "                         semantic similarity. (DEFAULT: path)\n\n";
@@ -1343,6 +1171,8 @@ sub showHelp() {
 
     print "--key                    Stores the  key file information in $log.key for\n";
     print "                         the purposes of evaluation\n\n";
+
+    print "--senses                 Sense information is embedded in the inputfile\n\n";
 
     print "--log STR                Directory containing the output files\n";
     print "                         Default: log \n\n";
@@ -1422,14 +1252,14 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-senserelate.pl,v 1.7 2011/04/12 21:16:43 btmcinnes Exp $';
-    print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
+    print '$Id: umls-allwords-senserelate.pl,v 1.3 2011/04/13 15:43:44 btmcinnes Exp $';
+    print "\nCopyright (c) 2011, Ted Pedersen & Bridget McInnes\n";
 }
 
 ##############################################################################
 #  function to output "ask for help" message when user's goofed
 ##############################################################################
 sub askHelp {
-    print STDERR "Type umls-senserelate.pl --help for help.\n";
+    print STDERR "Type umls-allwords-senserelate.pl --help for help.\n";
 }
     

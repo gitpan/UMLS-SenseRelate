@@ -24,8 +24,11 @@ WriteMakefile(
                                       'File::Spec' => '3.31',
                                       'File::Path' => '2.08'},
 	      'EXE_FILES'         => [("utils/umls-senserelate.pl",
+				       "utils/umls-allwords-senserelate.pl", 
 				       "utils/umls-senserelate-evaluation.pl", 
-				       "External/scorer/score.pl")],
+				       "External/scorer/score.pl", 
+				       "converters/mm-xml2aw-xml.pl",
+				       "converters/plain2mm-xml.pl")],
               'dist'              => {'COMPRESS' => 'gzip -9f', 'SUFFIX' => 'gz'},
               ($] >= 5.005 ?
                ('ABSTRACT_FROM'   => '', # retrieve abstract from module

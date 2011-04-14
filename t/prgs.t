@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More tests => 7;
 
 BEGIN{ use_ok ('File::Spec') }
 
@@ -40,3 +40,13 @@ ok(-e $util_prg);
 $output = `$perl $util_prg 2>&1`;
 like ($output, qr/The umls-senserelate log directory must be given on the command line.\s*Type umls-senserelate-evaluation\.pl --help for help\.\s*Usage\: umls-senserelate-evaluation\.pl \[OPTIONS\] LOG\_DIRECTORY/);
 
+#######################################################################################
+#  check the umls-allwords-senserelate.pl program
+#######################################################################################
+
+$util_prg = File::Spec->catfile('utils', 'umls-allwords-senserelate.pl');
+ok(-e $util_prg);
+
+#  check no command line inputs
+$output = `$perl $util_prg 2>&1`;
+like ($output, qr/The input file or directory must be given on the command line.\s*Type umls\-allwords-senserelate.pl \-\-help for help.\s*Usage\: umls\-allwords-senserelate.pl \[OPTIONS\] INPUTFILE/);
