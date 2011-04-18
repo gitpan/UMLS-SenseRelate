@@ -98,9 +98,10 @@ For example:
 
    <head id="d000.s001.t006" sense="C0000000">companion</head>
 
-=head3 --senses
+=head3 --candidates
 
-The sense information is embedded in the inputfile i the following format:
+The candidate information is embedded in the inputfile in the following 
+format:
 
   <head id="id" candidates="sense1,sense2,sense3">target word</head>
 
@@ -450,10 +451,12 @@ use UMLS::Interface;
 use UMLS::SenseRelate::AllWords;
 use Getopt::Long;
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses", "awxml", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "candidates", "awxml", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
 
 
-my $debug = 1;
+#  set debug
+my $debug = 0;
+if(defined $opt_debug) { $debug = 1; }
 
 #  if help is defined, print out help
 if( defined $opt_help ) {
@@ -550,11 +553,10 @@ sub assignSenses {
 	#  assign the senses to the terms
 	my @assignments = $senserelate->assignSenses(\@context);
 
-
 	#  open the log files
 	open(ANSWERS, ">$log/$id.answers") || die "Could not open $log/$id.answers\n"; 
        	foreach my $element (@assignments) { 
-	    print ANSWERS "$id $element\n";
+	    print ANSWERS "$element\n";
 	}
 	close ANSWERS;
     }
@@ -588,7 +590,7 @@ sub load_XML_Input {
 	}
 
 	
-	if(defined $opt_senses) { 
+	if(defined $opt_candidates) { 
 	    if($_=~/<head id=/) { 
 		if(! ($_=~/candidates=\"(.*?)\"/)) { 
 		    print STDERR "\nERROR. This instance does not contain the candidate senses.\n";
@@ -658,10 +660,10 @@ sub load_UMLS_SenseRelate {
     
     $option_hash{"window"}   = $window;
 
-    if(defined $opt_compound) { $option_hash{"compound"} = $opt_compound; }
-    if(defined $opt_stoplist) { $option_hash{"stoplist"} = $opt_stoplist; }
-    if(defined $opt_trace)    { $option_hash{"trace"}    = $opt_trace;    }
-    if(defined $opt_senses)   { $option_hash{"senses"}   = $opt_senses;   }
+    if(defined $opt_compound)  { $option_hash{"compound"}   = $opt_compound;  }
+    if(defined $opt_stoplist)  { $option_hash{"stoplist"}   = $opt_stoplist;  }
+    if(defined $opt_trace)     { $option_hash{"trace"}      = $opt_trace;     }
+    if(defined $opt_candidates){ $option_hash{"candidates"} = $opt_candidates;}
 
     $option_hash{"measure"} = $measure;
 
@@ -966,22 +968,24 @@ sub checkOptions {
 #  set user input and default options
 sub setOptions {
 
+
     if($debug) { print STDERR "In setOptions\n"; }
 
+    #  intialize the output variables
     my $set     = "";
     my $default = "";
-
-    $default .= "\numls-allwords-senserelate.pl Default Options:\n";
+        
+    #  get the time stamp
+    my $timestamp = &time_stamp();
     
     #  umls-allwords-senserelate.pl options
-    $set .= "\numls-allwords-senserelate.pl Specific Options:\n";
-
     if(defined $opt_awxml)  { $set .= "  --awxml\n";     }
     else                    { $default .= "  --awxml\n"; }
 
     if(defined $opt_key) { $set .= "  --key\n"; }
 
-    $log = "log";
+
+    $log = "log.$timestamp";
     if(defined $opt_log) { 
 	$set .= "  --log $opt_log\n"; 
 	$log  = $opt_log;
@@ -1008,12 +1012,9 @@ sub setOptions {
     }
     $floatformat = join '', '%', '.', $precision, 'f';
     
-    #  UMLS::SenseRelate Options
-    $set .= "\nUMLS::SenseRelate Specific Options:\n";
-   
     if(defined $opt_stoplist) { $set .= "  --stoplist $opt_stoplist\n"; }
     
-    if(defined $opt_senses) { $set .= "  --senses\n"; }
+    if(defined $opt_candidates) { $set .= "  --candidates\n"; }
 
     if(defined $opt_window)   { 
 	$window = $opt_window;
@@ -1040,7 +1041,6 @@ sub setOptions {
     }
 
     #  UMLS::Interface options
-    $set .= "\nUMLS::Interface Specific Options:\n";
     if(defined $opt_config) { 
 	$config = $opt_config;
 	$set .= "  --config $config\n";
@@ -1050,8 +1050,6 @@ sub setOptions {
     
     #  set the UMLS::Interface Database Options
     if(defined $opt_username) {
-	$set .= "UMLS::Interface Database Options:\n";
-	
 	if(defined $opt_username) { $set     .= "  --username $opt_username\n"; }
 	if(defined $opt_password) { $set     .= "  --password XXXXXXX\n";       }
 	if(defined $opt_database) {
@@ -1083,7 +1081,6 @@ sub setOptions {
     }
     
     #  UMLS::Similarity options
-    $set .= "\nUMLS::Similarity Specific Options:\n";
     if(defined $opt_measure) {
 	$measure = $opt_measure;
 	$set    .= "  --measure $measure\n";
@@ -1132,11 +1129,28 @@ sub setOptions {
     }
 
     #  print settings
-    print STDERR "ParameterSettings:\n\n";
+    print STDERR "Default Settings:\n";
     print STDERR "$default\n";
+    print STDERR "User Settings:\n";
     print STDERR "$set\n";
 }
 
+##############################################################################
+#  function to create a timestamp
+##############################################################################
+sub time_stamp {
+    my ($stamp);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+
+    $year += 1900;
+    $mon++;
+    $d = sprintf("%4d%2.2d%2.2d",$year,$mon,$mday);
+    $t = sprintf("%2.2d%2.2d%2.2d",$hour,$min,$sec);
+    
+    $stamp = $d . $t;
+
+    return($stamp);
+}
 
 ##############################################################################
 #  function to output minimal usage notes
@@ -1172,7 +1186,7 @@ sub showHelp() {
     print "--key                    Stores the  key file information in $log.key for\n";
     print "                         the purposes of evaluation\n\n";
 
-    print "--senses                 Sense information is embedded in the inputfile\n\n";
+    print "--candidates             Sense information is embedded in the inputfile\n\n";
 
     print "--log STR                Directory containing the output files\n";
     print "                         Default: log \n\n";
@@ -1252,7 +1266,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-allwords-senserelate.pl,v 1.4 2011/04/14 12:51:57 btmcinnes Exp $';
+    print '$Id: umls-allwords-senserelate.pl,v 1.6 2011/04/18 16:31:41 btmcinnes Exp $';
     print "\nCopyright (c) 2011, Ted Pedersen & Bridget McInnes\n";
 }
 

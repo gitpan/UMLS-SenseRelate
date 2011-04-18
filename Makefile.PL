@@ -23,7 +23,7 @@ WriteMakefile(
 				      'UMLS::Similarity'=> '0.89',
                                       'File::Spec' => '3.31',
                                       'File::Path' => '2.08'},
-	      'EXE_FILES'         => [("utils/umls-senserelate.pl",
+	      'EXE_FILES'         => [("utils/umls-targetword-senserelate.pl",
 				       "utils/umls-allwords-senserelate.pl", 
 				       "utils/umls-senserelate-evaluation.pl", 
 				       "External/scorer/score.pl", 

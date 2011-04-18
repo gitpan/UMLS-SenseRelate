@@ -1,6 +1,7 @@
 CHANGELOG
 converters/mm-xml2aw-xml.pl
 converters/plain2mm-xml.pl
+converters/README
 External/install.sh
 External/scorer/documentation/answer-format.txt
 External/scorer/documentation/documentation.txt
@@ -22,15 +23,20 @@ lib/UMLS/SenseRelate/TargetWord.pm
 Makefile.PL
 MANIFEST			This list of files
 README
-samples/allwords-example.awxml
-samples/input-targetword-example.adjustment.sval2
-samples/input-targetword-example.nurse.plain
+samples/allwords-example.aw-xml
+samples/allwords-example.mm-xml
+samples/allwords-example.plain
 samples/stoplist-nsp.regex
+samples/targetword-example.aa.mm-xml
+samples/targetword-example.aa.plain
+samples/targetword-example.adjustment.sval2
+samples/targetword-example.nurse.mm-xml
+samples/targetword-example.nurse.plain
 t/access.t
 t/functions.t
 t/prgs.t
 utils/synopsis.pl
 utils/umls-allwords-senserelate.pl
 utils/umls-senserelate-evaluation.pl
-utils/umls-senserelate.pl
+utils/umls-targetword-senserelate.pl
 META.yml                                 Module meta-data (added by MakeMaker)

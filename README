@@ -25,6 +25,7 @@ UMLS::SenseRelate
            lib/     
 
              Location of the UMLS::SenseRelate::TargetWord perl module. 
+             Location of the UMLS::SenseRelate::AllWords perl module. 
 
            t/       
 

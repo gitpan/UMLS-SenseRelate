@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.15 2011/04/14 12:51:57 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.16 2011/04/18 16:10:26 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -68,7 +68,6 @@ my %cache = ();
 my $pkg = "UMLS::SenseRelate::TargetWord";
 
 my $debug = 0;
-
 
 # -------------------- Class methods start here --------------------
 

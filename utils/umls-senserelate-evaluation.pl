@@ -22,7 +22,7 @@ Usage: umls-senserelate-evaluation.pl LOG_DIRECTORY
 
 =head3 LOG_DIRECTORY
 
-This is the directory outputted by the umls-senserelate.pl program 
+This is the directory outputted by the umls-targetword-senserelate.pl program 
 which contains the key and answer files for each of the target 
 words. 
 
@@ -177,7 +177,7 @@ if( defined $opt_debug ) {
 
 # At least 1 terms should be given on the command line.
 if(scalar(@ARGV) < 1) {
-    print STDERR "The umls-senserelate log directory must be given on the command line.\n";
+    print STDERR "The umls-targetword-senserelate log directory must be given on the command line.\n";
     &minimalUsageNotes();
     exit;
 }
@@ -346,7 +346,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-senserelate-evaluation.pl,v 1.3 2011/04/04 15:07:23 btmcinnes Exp $';
+    print '$Id: umls-senserelate-evaluation.pl,v 1.4 2011/04/18 16:18:55 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
 }
 

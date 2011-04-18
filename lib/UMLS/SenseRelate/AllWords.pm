@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::AllWords
-# (Last Updated $Id: AllWords.pm,v 1.3 2011/04/14 12:51:57 btmcinnes Exp $)
+# (Last Updated $Id: AllWords.pm,v 1.4 2011/04/18 16:10:26 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style WSD
 #
@@ -146,7 +146,7 @@ sub _setOptions {
     $compound      = $params->{'compound'};
     $trace         = $params->{'trace'};
     $measure       = $params->{'measure'};
-    $senses        = $params->{'senses'};
+    $senses        = $params->{'candidates'};
 
     #  set the measure
     if(! (defined $measure)) { 
@@ -261,7 +261,7 @@ sub assignSenses {
 	#  get the assigned sense
 	my $assignment = "";
 	foreach my $el (sort keys %{$hashref}) { 
-	    $assignment .= "%$tw/$el ";
+	    $assignment .= "$tw/$el ";
 	}
 
 	
@@ -271,7 +271,7 @@ sub assignSenses {
 	#  remove the white space
 	chop $assignment;
 
-	push @assignments, "$tw%$assignment";
+	push @assignments, "$id $tw%$assignment";
     
     }
 

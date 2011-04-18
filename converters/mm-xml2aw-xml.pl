@@ -1,11 +1,14 @@
 #!/usr/bin/perl -w
 
-=head1 mm-xml2aw-xml.pl
+=head1 NAME
+
+mm-xml2aw-xml.pl - This program converts MetaMap xml (mm-xml) formatted  
+text into the all words xml (aw-xml) format. 
 
 =head1 SYNOPSIS
 
-This program converts MetaMap xml formatted text to the 
-all-words xml formatted text.
+This program converts MetaMap xml (mm-xml) formatted text into the 
+all words xml (aw-xml) format. 
 
 =head1 USAGE
 
@@ -21,11 +24,6 @@ perl mm-xml2aw-xml.pl SOURCE DESTINATION
 
 Directory to contain temporary and log files. DEFAULT: log
 
-=head3 --metamap TWO DIGIT YEAR
-
-Specifies which version of metap to use. The default is 10 which will 
-run metamap10.   
-
 =head3 --help
 
 Displays the quick summary of program options.
@@ -36,8 +34,26 @@ Displays the version information.
 
 =head1 OUTPUT
 
-metamap xml format with the target words tagged with the 
-<Target> xml tag. 
+All words xml format similar to the SemEval all words disambiguation 
+task. In this format, each term assigned one or more concepts in the 
+metamap xml file are outputed as follows:
+
+ <?xml version="1.0"?>
+ <!DOCTYPE corpus SYSTEM  "all-words.dtd">
+ <corpus lang="en">
+ <text id="001">
+ <head id="d001.s001.t001" candidates="C1280500,C2348382">effect</head>
+ of
+ the
+ <head id="d001.s001.t004" candidates="C0449238">duration</head>
+ </text>
+ </corpus>
+
+There exists an addition to the regular SemEval format. The candidate 
+tags contain each possible sense of the term assigned by metamap. These 
+will be used as the possible senses in the umls-allwords-senserelate.pl 
+program when using the --candidate option. Otherwise, the senses come 
+from doing a dictionary lookup in the MRCONSO table of the UMLS. 
 
 =head1 PROGRAM REQUIREMENTS
 
@@ -109,10 +125,30 @@ if( defined $opt_version ) {
     exit;
 }
 
-#  set the log file
-my $log = "log";
-if(defined $opt_log) { $log = $opt_log; }
+my $default = "";
+my $set     = "";
 
+
+#  set the time stamp
+my $timestamp = &time_stamp();
+
+
+#  set the log file
+my $log = "log.$timestamp";
+if(defined $opt_log) { 
+    $log = $opt_log; 
+    $set .= "  --log $log\n";
+}
+else { $default .= "  --log $log\n"; }
+
+if($set ne "") { 
+    print STDERR "User Options: \n";
+    print STDERR "$set\n";
+}
+if($default ne "") { 
+    print STDERR "Default Options:\n";
+    print STDERR "$default\n";
+}
 
 # At least 2 terms should be given on the command line.
 if(scalar(@ARGV) < 2) {
@@ -170,7 +206,7 @@ foreach my $abstract (@abstracts) {
     print OUTFILE "<text id=\"$aid\">\n";
 
     #  set the xml file for this abstract
-    system "rm $infile.processing";    
+    if(-e "$infile.processing") { system "rm $infile.processing"; }
     open(FILE, ">$infile.processing") || die "Could not open $infile.processing\n";
     print FILE "$abstract";
     close FILE;
@@ -223,14 +259,11 @@ foreach my $abstract (@abstracts) {
 		while($mflag == 0) {
 		    foreach my $token (@tokens) {
 			$token=lc($token);
-			print "$token : $term ";
 			if($token=~/$term/) {
 			    $mappings{$token}{"$cuis[$i]/$matches[$i]"}++;
-			    $mflag = 1; print "mapping";
+			    $mflag = 1; 
 			}
-			print "\n";
 		    }
-		    print "====================================\n";
 		    chop $term;
 		    if($term=~/^\s*$/) { $mflag = 1; }
 		}
@@ -259,6 +292,9 @@ foreach my $abstract (@abstracts) {
 	}
     }
     print OUTFILE "<\/text>\n";
+    
+    #  remove the processing file
+    system "rm $infile.processing"; 
 }
 
 print OUTFILE "<\/corpus>\n";
@@ -267,6 +303,20 @@ print OUTFILE "<\/corpus>\n";
 ##############################################################################
 #  SUB FUNCTIONS
 ##############################################################################
+#  function to create a timestamp
+sub time_stamp {
+    my ($stamp);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+
+    $year += 1900;
+    $mon++;
+    $d = sprintf("%4d%2.2d%2.2d",$year,$mon,$mday);
+    $t = sprintf("%2.2d%2.2d%2.2d",$hour,$min,$sec);
+    
+    $stamp = $d . $t;
+
+    return($stamp);
+}
 
 #  function to output minimal usage notes
 sub minimalUsageNotes {
@@ -285,6 +335,9 @@ sub showHelp() {
 
     print "OPTIONS:\n\n";
 
+    print "--log                    Directory to contain temporary and log\n";
+    print "                         files. DEFAULT: log.<timestamp>\n\n";
+
     print "--version                Prints the version number\n\n";
 
     print "--help                   Prints this help message.\n\n";
@@ -292,7 +345,7 @@ sub showHelp() {
 
 #  function to output the version number
 sub showVersion {
-        print '$Id: mm-xml2aw-xml.pl,v 1.2 2011/04/14 12:51:57 btmcinnes Exp $';
+        print '$Id: mm-xml2aw-xml.pl,v 1.6 2011/04/18 16:31:41 btmcinnes Exp $';
         print "\nCopyright (c) 2007, Ted Pedersen & Bridget McInnes\n";
 }
 

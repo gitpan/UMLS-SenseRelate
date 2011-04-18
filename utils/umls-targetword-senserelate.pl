@@ -4,8 +4,9 @@
 
 =head1 NAME
 
-umls-senserelate.pl - This program determines the correct sense 
-of an ambiguous term using semantic similarity measures.
+umls-targetword-senserelate.pl - This program performs target word 
+disambiguation and determines the correct sense of an ambiguous term 
+using semantic similarity measures.
 
 =head1 SYNOPSIS
 
@@ -15,7 +16,7 @@ measures from the UMLS::Similarity package.
 
 =head1 USAGE
 
-Usage: umls-senserelate.pl [OPTIONS] INPUTFILE
+Usage: umls-targetword-senserelate.pl [OPTIONS] INPUTFILE
 
 =head2 OUTPUT
 
@@ -60,10 +61,25 @@ If the sense information is not there, then you can not use the --key FILE optio
 
 The format is in sval2 format
 
+=head3 --metamap
+
+The format is in metamap xml format in which each target word though
+is identified by a <Target></Target> tag similar to that of the 
+<Token></Token> tags. 
+
+We have a conversion program in the coverters/ directory which will 
+convert plain text into the what we refer to as mm-xml tagged text 
+called: plain2mm-xml.pl 
+
+=head3 --candidates
+
+This option uses the candidate senses as identified by metamap for 
+the target word. This option can only be used with the --metamap option. 
+
 =head3 --senses DIR|File
 
-This is the directory that contains the the sense file for each target 
-word you are going to disambiguate or just the file itself. 
+This is the directory that contains the candidate sense file for each 
+target word you are going to disambiguate or just the file itself. 
 
 The files for the target word contains the possible senses of the target 
 word. 
@@ -334,16 +350,16 @@ There are three different option configurations that you have with the
 
 1. No --dictfile - which will use the UMLS definitions
 
-  umls-senserelate.pl --measure lesk hand foot
+  umls-targetword-senserelate.pl --measure lesk hand foot
 
 2. --dictfile - which will just use the dictfile definitions
 
-  umls-senserelate.pl --measure lesk --dictfile samples/dictfile hand foot
+  umls-targetword-senserelate.pl --measure lesk --dictfile samples/dictfile hand foot
 
 3. --dictfile + --config - which will use both the UMLS and dictfile 
 definitions
 
-  umls-senserelate.pl --measure lesk --dictfile samples/dictfile --config
+  umls-targetword-senserelate.pl --measure lesk --dictfile samples/dictfile --config
   configuration hand foot
 
 Keep in mind, when using this file with the --config option, if 
@@ -445,8 +461,11 @@ this program; if not, write to:
 use UMLS::Interface;
 use UMLS::SenseRelate::TargetWord;
 use Getopt::Long;
+use XML::Twig;
+use File::Spec;
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
+
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "metamap", "candidates", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 1;
@@ -682,6 +701,135 @@ sub load_Sval2_Input {
 	&minimalUsageNotes();
 	exit;
     }
+
+}
+
+#  loads the instances in metamap format in the instance hash
+sub load_MetaMap_Input {
+
+    my $inputfile = shift;
+    
+    if($debug) { print STDERR "In loadPlainInput for $inputfile\n"; }
+    
+    #  open the input file
+    open(INPUT, $inputfile) || die "Could not open input file: $inputfile\n";
+        
+    my @abstracts = (); my $abstract = "";
+    while(<INPUT>) { 
+	if($_=~/\<?xml version/) { 
+	    if($abstract ne "") { push @abstracts, $abstract; }
+	    $abstract = "";
+	}
+	$abstract .= $_;
+    }
+
+
+my $abstractid = 0;
+foreach my $abstract (@abstracts) { 
+    
+    if($abstract=~/^\s*$/) { next; }
+    
+    # increment id
+    $abstractid++;
+    
+    #  print document id
+    my $aid = sprintf("%03d", $abstractid);
+    print OUTFILE "<text id=\"$aid\">\n";
+
+    #  set the xml file for this abstract
+    system "rm $infile.processing";    
+    open(FILE, ">$infile.processing") || die "Could not open $infile.processing\n";
+    print FILE "$abstract";
+    close FILE;
+
+    #  load the metamap xml output
+    my $t= XML::Twig->new();
+    $t->parsefile("$infile.processing");
+    my $root = $t->root;
+
+    #  loop through tokens
+    my $method= $root; my $id = 0; my $instance = "";
+    while( $method=$method->next_elt( $root )) { 
+		
+	if($method->local_name eq "Utterances") { 
+	    if($id != 0) { 
+		$instancehash{$tw}{$id} = $instance;
+	    }
+	    $id++; 
+	    $instance = "";
+	}
+
+	if($method->local_name eq "Token") { 
+	    my $token = $method->text; $instance .= "$token ";
+	}
+	
+	#  check if in mapping
+	if($method->local_name eq "Mapping") { $flag = 1; }
+
+	#  if in mapping, get the cui
+	if( ($method->local_name eq "CandidateCUI") && ($flag = 1) ) { 
+	    my $cui = $method->text; push @cuis, $cui;
+	}
+
+	#  if in mapping, get the cui
+	if( ($method->local_name eq "CandidateMatched") && ($flag = 1) ) { 
+	    my $match = $method->text; 
+	    $match=~s/[\*\?\+\(\)\[\]\/ ]//g; 
+	    push @matches, lc($match);
+	}
+	
+	if($method->local_name eq "Phrase") { 
+
+	    my %mappings = ();
+	    foreach my $i (0..$#matches) { 
+		my $term = $matches[$i]; my $mflag = 0;
+		while($mflag == 0) {
+		    foreach my $token (@tokens) {
+			$token=lc($token);
+			print "$token : $term ";
+			if($token=~/$term/) {
+			    $mappings{$token}{"$cuis[$i]/$matches[$i]"}++;
+			    $mflag = 1; print "mapping";
+			}
+			print "\n";
+		    }
+		    print "====================================\n";
+		    chop $term;
+		    if($term=~/^\s*$/) { $mflag = 1; }
+		}
+	    }
+	    foreach my $token (@tokens) { 
+		my $tok = lc($token);
+		$tokenid++;
+		
+		my $a = sprintf("%03d", $abstractid);
+		my $s = sprintf("%03d", $sentenceid);
+		my $t = sprintf("%03d", $tokenid);
+		my $id = "d$a.s$s.t$t";
+		
+		my $senses = "";
+		foreach my $m (sort keys %{$mappings{$tok}}) { 
+		    $m=~/(C[0-9]+)\//;
+		    $senses .= "$1,";
+		} chop $senses;
+
+		if($senses=~/^\s*$/) { print OUTFILE "$token\n"; }
+		else                 { print OUTFILE "<head id=\"$id\" candidates=\"$senses\">$token<\/head>\n"; }
+	    }
+	    @tokens  = ();;
+	    @cuis    = ();
+	    @matches = ();
+	}
+    }
+
+}
+
+
+
+
+
+
+
 
 }
 
@@ -998,7 +1146,7 @@ sub checkOptions {
 	}
 	else {
 	    print STDERR "The measure ($opt_measure) is not defined for\n";
-	    print STDERR "the Umls-Senserelate package at this time.\n\n";
+	    print STDERR "the UMLS-SenseRelate package at this time.\n\n";
 	    &minimalUsageNotes();
 	    exit;
 	}   
@@ -1139,10 +1287,7 @@ sub setOptions {
     my $set     = "";
     my $default = "";
 
-    $default .= "\numls-senserelate.pl Default Options:\n";
-    
-    #  umls-senserelate.pl options
-    $set .= "\numls-senserelate.pl Specific Options:\n";
+    #  umls-targetword-senserelate.pl options
 
     if(defined $opt_sval2)    { $set .= "  --sval2\n";     }
     elsif(defined $opt_plain) { $set .= "  --plain\n";     }
@@ -1178,8 +1323,6 @@ sub setOptions {
     $floatformat = join '', '%', '.', $precision, 'f';
     
     #  UMLS::SenseRelate Options
-    $set .= "\nUMLS::SenseRelate Specific Options:\n";
-   
     if(defined $opt_senses)   { $set .= "  --senses $opt_senses\n";     }    
     if(defined $opt_stoplist) { $set .= "  --stoplist $opt_stoplist\n"; }
 
@@ -1208,7 +1351,6 @@ sub setOptions {
     }
 
     #  UMLS::Interface options
-    $set .= "\nUMLS::Interface Specific Options:\n";
     if(defined $opt_config) { 
 	$config = $opt_config;
 	$set .= "  --config $config\n";
@@ -1218,8 +1360,6 @@ sub setOptions {
     
     #  set the UMLS::Interface Database Options
     if(defined $opt_username) {
-	$set .= "UMLS::Interface Database Options:\n";
-	
 	if(defined $opt_username) { $set     .= "  --username $opt_username\n"; }
 	if(defined $opt_password) { $set     .= "  --password XXXXXXX\n";       }
 	if(defined $opt_database) {
@@ -1251,7 +1391,6 @@ sub setOptions {
     }
     
     #  UMLS::Similarity options
-    $set .= "\nUMLS::Similarity Specific Options:\n";
     if(defined $opt_measure) {
 	$measure = $opt_measure;
 	$set    .= "  --measure $measure\n";
@@ -1311,7 +1450,7 @@ sub setOptions {
 ##############################################################################
 sub minimalUsageNotes {
     
-    print "Usage: umls-senserelate.pl [OPTIONS] INPUTFILE\n";
+    print "Usage: umls-targetword-senserelate.pl [OPTIONS] INPUTFILE\n";
     &askHelp();
     exit;
 }
@@ -1323,7 +1462,7 @@ sub showHelp() {
         
     print "This is a utility \n";
   
-    print "Usage: umls-senserelate.pl [OPTIONS] INPUTFILE\n\n";
+    print "Usage: umls-targetword-senserelate.pl [OPTIONS] INPUTFILE\n\n";
     
     print "\n\nGeneral Options:\n\n";
 
@@ -1422,7 +1561,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-senserelate.pl,v 1.7 2011/04/12 21:16:43 btmcinnes Exp $';
+    print '$Id: umls-targetword-senserelate.pl,v 1.2 2011/04/18 16:33:15 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
 }
 
@@ -1430,6 +1569,6 @@ sub showVersion {
 #  function to output "ask for help" message when user's goofed
 ##############################################################################
 sub askHelp {
-    print STDERR "Type umls-senserelate.pl --help for help.\n";
+    print STDERR "Type umls-targetword-senserelate.pl --help for help.\n";
 }
     

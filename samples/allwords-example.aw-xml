@@ -56,9 +56,13 @@ the
 <head id="d001.s003.t005" candidates="C1517004">experimental</head>
 <head id="d001.s003.t006" candidates="C0012155,C0012159,C0012180">diets</head>
 with
-DDGS
+<head id="d001.s003.t008" candidates="C0682260">distillers</head>
+<head id="d001.s003.t009" candidates="C0011682,C0151908,C0205222,C1512080,C2148606">dried</head>
+<head id="d001.s003.t010" candidates="C0007757,C0086369,C1552950">grains</head>
+with
+<head id="d001.s003.t012" candidates="C1749467,C1948047">solubles</head>
 at
-<head id="d001.s003.t010" candidates="C0441889,C0456079">levels</head>
+<head id="d001.s003.t014" candidates="C0441889,C0456079">levels</head>
 of
 0
 ,
@@ -67,8 +71,8 @@ of
 and
 20 %
 were
-<head id="d001.s003.t019" candidates="C1444648">offered</head>
-<head id="d001.s003.t020" candidates="C1879743">ad libitum</head>
+<head id="d001.s003.t023" candidates="C1444648">offered</head>
+<head id="d001.s003.t024" candidates="C1879743">ad libitum</head>
 for
 7
 ,
@@ -77,7 +81,7 @@ for
 and
 3 d
 ,
-<head id="d001.s003.t029" candidates="C0439659,C1272689">starting</head>
+<head id="d001.s003.t033" candidates="C0439659,C1272689">starting</head>
 on
 14
 ,
@@ -124,7 +128,7 @@ the
 <head id="d001.s006.t018" candidates="C0021853">intestine</head>
 <head id="d001.s006.t019" candidates="C0205155,C1293097,C1522472,C1552923,C1705191">section</head>
 between
-<head id="d001.s006.t021" candidates="C0012817,C0025037,C1546602">meckels diverticulum</head>
+<head id="d001.s006.t021" candidates="C0012817,C0025037,C1546602">meckel ' s diverticulum</head>
 and
 2
 cm
@@ -172,17 +176,25 @@ significantly
 by
 <head id="d001.s008.t025" candidates="C1512693">inclusion</head>
 of
-DDGS
+<head id="d001.s009.t002" candidates="C0682260">distillers</head>
+<head id="d001.s009.t003" candidates="C0011682,C0151908,C0205222,C1512080,C2148606">dried</head>
+<head id="d001.s009.t004" candidates="C0007757,C0086369,C1552950">grains</head>
+with
+<head id="d001.s009.t006" candidates="C1749467,C1948047">solubles</head>
 .
 Digestibility
 of
-<head id="d001.s009.t006" candidates="C1235746">aa</head>
+<head id="d001.s009.t010" candidates="C1235746">aa</head>
 in
-DDGS
+<head id="d001.s009.t012" candidates="C0682260">distillers</head>
+<head id="d001.s009.t013" candidates="C0011682,C0151908,C0205222,C1512080,C2148606">dried</head>
+<head id="d001.s009.t014" candidates="C0007757,C0086369,C1552950">grains</head>
+with
+<head id="d001.s009.t016" candidates="C1749467,C1948047">solubles</head>
 was
-<head id="d001.s009.t010" candidates="C2004162">determined</head>
+<head id="d001.s009.t018" candidates="C2004162">determined</head>
 by
-<head id="d001.s009.t012" candidates="C0042153,C0457083,C1524063,C1947944">using</head>
+<head id="d001.s009.t020" candidates="C0042153,C0457083,C1524063,C1947944">using</head>
 a
 <head id="d001.s010.t002" candidates="C0023733,C0205132,C0684320,C0684321,C2346679">linear regression</head>
 <head id="d001.s010.t003" candidates="C0449445,C1292724,C2371926">approach</head>
@@ -192,8 +204,12 @@ digestibility
 of
 <head id="d001.s010.t008" candidates="C1235746">aa</head>
 in
-DDGS
-<head id="d001.s010.t011" candidates="C1514721,C2348147">ranged</head>
+<head id="d001.s010.t010" candidates="C0682260">distillers</head>
+<head id="d001.s010.t011" candidates="C0011682,C0151908,C0205222,C1512080,C2148606">dried</head>
+<head id="d001.s010.t012" candidates="C0007757,C0086369,C1552950">grains</head>
+with
+<head id="d001.s010.t014" candidates="C1749467,C1948047">solubles</head>
+<head id="d001.s010.t015" candidates="C1514721,C2348147">ranged</head>
 from
 76 %
 (
@@ -202,16 +218,16 @@ Arg
 5
 d
 of
-<head id="d001.s010.t020" candidates="C0204695,C2148613">feeding</head>
+<head id="d001.s010.t024" candidates="C0204695,C2148613">feeding</head>
 )
 to
 33 %
 (
-<head id="d001.s010.t025" candidates="C0206293">asp</head>
+<head id="d001.s010.t029" candidates="C0206293">asp</head>
 ,
 3 d
 of
-<head id="d001.s010.t029" candidates="C0204695,C2148613">feeding</head>
+<head id="d001.s010.t033" candidates="C0204695,C2148613">feeding</head>
 )
 .
 There
@@ -226,12 +242,20 @@ on
 <head id="d001.s011.t012" candidates="C1235746">aa</head>
 digestibility
 of
-DDGS
+<head id="d001.s012.t002" candidates="C0682260">distillers</head>
+<head id="d001.s012.t003" candidates="C0011682,C0151908,C0205222,C1512080,C2148606">dried</head>
+<head id="d001.s012.t004" candidates="C0007757,C0086369,C1552950">grains</head>
+with
+<head id="d001.s012.t006" candidates="C1749467,C1948047">solubles</head>
 .
-<head id="d001.s012.t004" candidates="C0024337,C1446005">lysine</head>
+<head id="d001.s012.t008" candidates="C0024337,C1446005">lysine</head>
 digestibility
 of
-DDGS
+<head id="d001.s012.t011" candidates="C0682260">distillers</head>
+<head id="d001.s012.t012" candidates="C0011682,C0151908,C0205222,C1512080,C2148606">dried</head>
+<head id="d001.s012.t013" candidates="C0007757,C0086369,C1552950">grains</head>
+with
+<head id="d001.s012.t015" candidates="C1749467,C1948047">solubles</head>
 was
 72 %
 .
@@ -260,12 +284,16 @@ arg
 and
 <head id="d001.s013.t026" candidates="C0042285">val</head>
 of
-DDGS
+<head id="d001.s013.t028" candidates="C0682260">distillers</head>
+<head id="d001.s013.t029" candidates="C0011682,C0151908,C0205222,C1512080,C2148606">dried</head>
+<head id="d001.s013.t030" candidates="C0007757,C0086369,C1552950">grains</head>
+with
+<head id="d001.s013.t032" candidates="C1749467,C1948047">solubles</head>
 across
-<head id="d001.s013.t030" candidates="C0442043,C0935456,C2362314">the</head>
+<head id="d001.s013.t034" candidates="C0442043,C0935456,C2362314">the</head>
 3
 prefeeding
-<head id="d001.s013.t033" candidates="C0040223,C0442043,C0935456,C1632851,C2362314">times</head>
+<head id="d001.s013.t037" candidates="C0040223,C0442043,C0935456,C1632851,C2362314">times</head>
 was
 66 %
 .
@@ -326,19 +354,18 @@ with
 the
 <head id="d002.s002.t010" candidates="C0205450">four</head>
 <head id="d002.s002.t011" candidates="C0001128,C0002520">amino acids</head>
-<head id="d002.s002.t012" candidates="C1235746">aa</head>
 ,
-<head id="d002.s002.t014" candidates="C0017890,C0522461">glycine</head>
+<head id="d002.s002.t013" candidates="C0017890,C0522461">glycine</head>
 ,
-<head id="d002.s002.t016" candidates="C0036720">serine</head>
+<head id="d002.s002.t015" candidates="C0036720">serine</head>
 ,
-<head id="d002.s002.t018" candidates="C0040005">threonine</head>
+<head id="d002.s002.t017" candidates="C0040005">threonine</head>
 ,
 and
-<head id="d002.s002.t021" candidates="C0033382">proline</head>
+<head id="d002.s002.t020" candidates="C0033382">proline</head>
 ,
 are
-<head id="d002.s002.t024" candidates="C0332128,C2004054">examined</head>
+<head id="d002.s002.t023" candidates="C0332128,C2004054">examined</head>
 in
 <head id="d002.s003.t002" candidates="C1522508,C1561567">detail</head>
 .
@@ -356,10 +383,12 @@ are
 <head id="d002.s003.t015" candidates="C0086168">dissociation</head>
 of
 the
-rb
-<head id="d002.s003.t019" candidates="C0439855,C1704241">complexes</head>
+rb ( + ) (
+<head id="d002.s003.t019" candidates="C0001128,C0002520">amino acids</head>
+)
+<head id="d002.s003.t021" candidates="C0439855,C1704241">complexes</head>
 with
-<head id="d002.s003.t021" candidates="C0043339">xenon</head>
+<head id="d002.s003.t023" candidates="C0043339">xenon</head>
 in
 a
 <head id="d002.s004.t003" candidates="C0181090,C0302614,C1706050,C2003846">guided</head>
@@ -430,7 +459,7 @@ are
 for
 <head id="d002.s005.t041" candidates="C0439855,C1704241">complexes</head>
 of
-Rb
+Rb ( + )
 with
 <head id="d002.s005.t045" candidates="C0017890,C0522461">glycine</head>
 ,
@@ -519,7 +548,7 @@ latter
 <head id="d002.s008.t002" candidates="C0680240">agreement</head>
 .
 for
-rb (
+rb ( + ) (
 <head id="d002.s008.t006" candidates="C0017890,C0522461">glycine</head>
 )
 ,
@@ -546,7 +575,7 @@ a
 is
 <head id="d002.s008.t030" candidates="C0037088,C0243095">found</head>
 for
-rb (
+rb ( + ) (
 <head id="d002.s008.t033" candidates="C0033382">proline</head>
 )
 except
@@ -564,11 +593,11 @@ zwitterionic
 <head id="d002.s009.t003" candidates="C0678594">structure</head>
 .
 Both
-rb (
+rb ( + ) (
 <head id="d002.s009.t007" candidates="C0036720">serine</head>
 )
 and
-rb (
+rb ( + ) (
 <head id="d002.s009.t011" candidates="C0040005">threonine</head>
 )
 are
@@ -593,7 +622,7 @@ b3p86
 <head id="d002.s009.t032" candidates="C0750482">slightly</head>
 <head id="d002.s009.t033" candidates="C0558295,C1548789">prefers</head>
 <head id="d002.s009.t034" candidates="C0243122,C1145667,C1167622">binding</head>
-rb
+rb ( + )
 at
 the
 <head id="d002.s010.t003" candidates="C0001128,C0007066,C0596260">carboxylic acid</head>

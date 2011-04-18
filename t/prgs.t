@@ -18,19 +18,19 @@ my $util_prg = "";
 my $output   = "";
 
 #######################################################################################
-#  check the umls-senserelate.pl program
+#  check the umls-targetword-senserelate.pl program
 #######################################################################################
 
-$util_prg = File::Spec->catfile('utils', 'umls-senserelate.pl');
+$util_prg = File::Spec->catfile('utils', 'umls-targetword-senserelate.pl');
 ok(-e $util_prg);
 
 #  check no command line inputs
 $output = `$perl $util_prg 2>&1`;
-like ($output, qr/The input file or directory must be given on the command line.\s*Type umls-senserelate\.pl --help for help\.\s*Usage\: umls-senserelate\.pl \[OPTIONS\] INPUTFILE/);
+like ($output, qr/The input file or directory must be given on the command line.\s*Type umls-targetword-senserelate\.pl --help for help\.\s*Usage\: umls-targetword-senserelate\.pl \[OPTIONS\] INPUTFILE/);
 
 
 #######################################################################################
-#  check the umls-senserelate.pl program
+#  check the umls-targetword-senserelate.pl program
 #######################################################################################
 
 $util_prg = File::Spec->catfile('utils', 'umls-senserelate-evaluation.pl');
@@ -38,7 +38,7 @@ ok(-e $util_prg);
 
 #  check no command line inputs
 $output = `$perl $util_prg 2>&1`;
-like ($output, qr/The umls-senserelate log directory must be given on the command line.\s*Type umls-senserelate-evaluation\.pl --help for help\.\s*Usage\: umls-senserelate-evaluation\.pl \[OPTIONS\] LOG\_DIRECTORY/);
+like ($output, qr/The umls-targetword-senserelate log directory must be given on the command line.\s*Type umls-senserelate-evaluation\.pl --help for help\.\s*Usage\: umls-senserelate-evaluation\.pl \[OPTIONS\] LOG\_DIRECTORY/);
 
 #######################################################################################
 #  check the umls-allwords-senserelate.pl program
