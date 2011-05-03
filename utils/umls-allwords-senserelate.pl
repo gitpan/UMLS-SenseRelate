@@ -549,13 +549,13 @@ sub assignSenses {
 
 	#  get the context
 	my @context = @{$instancehash{$id}}; 
-	
+
 	#  assign the senses to the terms
-	my @assignments = $senserelate->assignSenses(\@context);
+	my $assignments = $senserelate->assignSenses(\@context);
 
 	#  open the log files
 	open(ANSWERS, ">$log/$id.answers") || die "Could not open $log/$id.answers\n"; 
-       	foreach my $element (@assignments) { 
+       	foreach my $element (@{$assignments}) { 
 	    print ANSWERS "$element\n";
 	}
 	close ANSWERS;
@@ -1266,7 +1266,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-allwords-senserelate.pl,v 1.6 2011/04/18 16:31:41 btmcinnes Exp $';
+    print '$Id: umls-allwords-senserelate.pl,v 1.7 2011/05/03 13:58:59 btmcinnes Exp $';
     print "\nCopyright (c) 2011, Ted Pedersen & Bridget McInnes\n";
 }
 

@@ -35,7 +35,7 @@
 
 package UMLS::SenseRelate;
 
-$VERSION = '0.09';
+$VERSION = '0.11';
 
 sub new
 {

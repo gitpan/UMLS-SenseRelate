@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::AllWords
-# (Last Updated $Id: AllWords.pm,v 1.4 2011/04/18 16:10:26 btmcinnes Exp $)
+# (Last Updated $Id: AllWords.pm,v 1.6 2011/05/03 13:58:58 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style WSD
 #
@@ -275,7 +275,7 @@ sub assignSenses {
     
     }
 
-    return @assignments;
+    return \@assignments;
 }
 
 #  print out the function name to standard error
@@ -305,7 +305,51 @@ options from the UMLS::Similarity package.
 
 =head1 SYNOPSIS
 
-work on synopsis
+ use UMLS::Similarity;
+ use UMLS::SenseRelate::AllWords;
+
+ #  initialize option hash and umls
+ my %option_hash = ();
+ my $umls        = "";
+ my $meas        = "";
+ my $senserelate = "";
+ my $params      = "";
+
+ #  set interface     
+ $option_hash{"t"} = 1;
+ $option_hash{"realtime"} = 1;
+ $umls = UMLS::Interface->new(\%option_hash);
+
+ #  set measure
+ use UMLS::Similarity::path;
+ $meas = UMLS::Similarity::path->new($umls);
+
+ #  set senserelate
+ $params{"measure"} = "path";
+ $params{"candidates"} = 1;
+ $senserelate = UMLS::SenseRelate::AllWords->new($umls, $meas, \%params);
+
+
+ #  set the context array
+ my @context = ();
+ push @context, "<head id=\"d001.s001.t001\" candidates=\"C1280500,C2348382\">effect</head>";
+ push @context, "of";
+ push @context, "the";
+ push @context, "duration";
+ push @context, "of";
+ push @context, "prefeeding";
+ push @context, "on";
+ push @context, "<head id=\"d001.s001.t008\" candidates=\"C0001128,C0002520\">amino acid</head>";
+ push @context, "digestibility";
+ push @context, "of";
+ push @context, "<head id=\"d001.s001.t011\" candidates=\"C0043137,C0087114\">wheat</head>";
+ push @context, "distillers";
+
+ my $arrayref = $senserelate->assignSenses(\@context);
+
+ foreach my $element (@{$arrayref}) { 
+     print "$element\n";
+ }
 
 =head1 INSTALL
 
@@ -359,7 +403,7 @@ Ted Pedersen <tpederse@d.umn.edu>
 =head1 COPYRIGHT
 
  Copyright (c) 2010-2011
- Bridget T. McInnes, University of Minnesota Twin CitiesT
+ Bridget T. McInnes, University of Minnesota Twin Cities
  bthomson at umn.edu
 
  Ted Pedersen, University of Minnesota Duluth

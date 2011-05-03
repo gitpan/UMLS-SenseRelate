@@ -468,7 +468,7 @@ use File::Spec;
 eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "metamap", "candidates", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
 
 
-my $debug = 1;
+my $debug = 0;
 
 #  if help is defined, print out help
 if( defined $opt_help ) {
@@ -723,68 +723,67 @@ sub load_MetaMap_Input {
 	$abstract .= $_;
     }
 
-
-my $abstractid = 0;
-foreach my $abstract (@abstracts) { 
-    
-    if($abstract=~/^\s*$/) { next; }
-    
-    # increment id
-    $abstractid++;
-    
-    #  print document id
-    my $aid = sprintf("%03d", $abstractid);
-    print OUTFILE "<text id=\"$aid\">\n";
-
-    #  set the xml file for this abstract
-    system "rm $infile.processing";    
-    open(FILE, ">$infile.processing") || die "Could not open $infile.processing\n";
-    print FILE "$abstract";
-    close FILE;
-
-    #  load the metamap xml output
-    my $t= XML::Twig->new();
-    $t->parsefile("$infile.processing");
-    my $root = $t->root;
-
-    #  loop through tokens
-    my $method= $root; my $id = 0; my $instance = "";
-    while( $method=$method->next_elt( $root )) { 
-		
-	if($method->local_name eq "Utterances") { 
-	    if($id != 0) { 
-		$instancehash{$tw}{$id} = $instance;
+    my $abstractid = 0;
+    foreach my $abstract (@abstracts) { 
+	
+	if($abstract=~/^\s*$/) { next; }
+	
+	# increment id
+	$abstractid++;
+	
+	#  print document id
+	my $aid = sprintf("%03d", $abstractid);
+	print OUTFILE "<text id=\"$aid\">\n";
+	
+	#  set the xml file for this abstract
+	system "rm $infile.processing";    
+	open(FILE, ">$infile.processing") || die "Could not open $infile.processing\n";
+	print FILE "$abstract";
+	close FILE;
+	
+	#  load the metamap xml output
+	my $t= XML::Twig->new();
+	$t->parsefile("$infile.processing");
+	my $root = $t->root;
+	
+	#  loop through tokens
+	my $method= $root; my $id = 0; my $instance = "";
+	while( $method=$method->next_elt( $root )) { 
+	    
+	    if($method->local_name eq "Utterances") { 
+		if($id != 0) { 
+		    $instancehash{$tw}{$id} = $instance;
+		}
+		$id++; 
+		$instance = "";
 	    }
-	    $id++; 
-	    $instance = "";
-	}
-
-	if($method->local_name eq "Token") { 
-	    my $token = $method->text; $instance .= "$token ";
-	}
+	    
+	    if($method->local_name eq "Token") { 
+		my $token = $method->text; $instance .= "$token ";
+	    }
 	
-	#  check if in mapping
-	if($method->local_name eq "Mapping") { $flag = 1; }
-
-	#  if in mapping, get the cui
-	if( ($method->local_name eq "CandidateCUI") && ($flag = 1) ) { 
+	    #  check if in mapping
+	    if($method->local_name eq "Mapping") { $flag = 1; }
+	    
+	    #  if in mapping, get the cui
+	    if( ($method->local_name eq "CandidateCUI") && ($flag = 1) ) { 
 	    my $cui = $method->text; push @cuis, $cui;
-	}
-
-	#  if in mapping, get the cui
-	if( ($method->local_name eq "CandidateMatched") && ($flag = 1) ) { 
-	    my $match = $method->text; 
-	    $match=~s/[\*\?\+\(\)\[\]\/ ]//g; 
-	    push @matches, lc($match);
-	}
-	
-	if($method->local_name eq "Phrase") { 
-
-	    my %mappings = ();
-	    foreach my $i (0..$#matches) { 
-		my $term = $matches[$i]; my $mflag = 0;
-		while($mflag == 0) {
-		    foreach my $token (@tokens) {
+	    }
+	    
+	    #  if in mapping, get the cui
+	    if( ($method->local_name eq "CandidateMatched") && ($flag = 1) ) { 
+		my $match = $method->text; 
+		$match=~s/[\*\?\+\(\)\[\]\/ ]//g; 
+		push @matches, lc($match);
+	    }
+	    
+	    if($method->local_name eq "Phrase") { 
+		
+		my %mappings = ();
+		foreach my $i (0..$#matches) { 
+		    my $term = $matches[$i]; my $mflag = 0;
+		    while($mflag == 0) {
+			foreach my $token (@tokens) {
 			$token=lc($token);
 			print "$token : $term ";
 			if($token=~/$term/) {
@@ -792,45 +791,37 @@ foreach my $abstract (@abstracts) {
 			    $mflag = 1; print "mapping";
 			}
 			print "\n";
+			}
+			print "====================================\n";
+			chop $term;
+			if($term=~/^\s*$/) { $mflag = 1; }
 		    }
-		    print "====================================\n";
-		    chop $term;
-		    if($term=~/^\s*$/) { $mflag = 1; }
 		}
-	    }
-	    foreach my $token (@tokens) { 
-		my $tok = lc($token);
-		$tokenid++;
-		
-		my $a = sprintf("%03d", $abstractid);
-		my $s = sprintf("%03d", $sentenceid);
-		my $t = sprintf("%03d", $tokenid);
-		my $id = "d$a.s$s.t$t";
-		
-		my $senses = "";
-		foreach my $m (sort keys %{$mappings{$tok}}) { 
-		    $m=~/(C[0-9]+)\//;
-		    $senses .= "$1,";
-		} chop $senses;
+		foreach my $token (@tokens) { 
+		    my $tok = lc($token);
+		    $tokenid++;
+		    
+		    my $a = sprintf("%03d", $abstractid);
+		    my $s = sprintf("%03d", $sentenceid);
+		    my $t = sprintf("%03d", $tokenid);
+		    my $id = "d$a.s$s.t$t";
+		    
+		    my $senses = "";
+		    foreach my $m (sort keys %{$mappings{$tok}}) { 
+			$m=~/(C[0-9]+)\//;
+			$senses .= "$1,";
+		    } chop $senses;
 
-		if($senses=~/^\s*$/) { print OUTFILE "$token\n"; }
-		else                 { print OUTFILE "<head id=\"$id\" candidates=\"$senses\">$token<\/head>\n"; }
+		    if($senses=~/^\s*$/) { print OUTFILE "$token\n"; }
+		    else                 { print OUTFILE "<head id=\"$id\" candidates=\"$senses\">$token<\/head>\n"; }
+		}
+		@tokens  = ();;
+		@cuis    = ();
+		@matches = ();
 	    }
-	    @tokens  = ();;
-	    @cuis    = ();
-	    @matches = ();
 	}
+
     }
-
-}
-
-
-
-
-
-
-
-
 }
 
 #  loads the instances in plain format in to the instance hash
@@ -1287,15 +1278,17 @@ sub setOptions {
     my $set     = "";
     my $default = "";
 
-    #  umls-targetword-senserelate.pl options
+    #  get the time stamp
+    my $timestamp = &time_stamp();
 
+    #  umls-targetword-senserelate.pl options
     if(defined $opt_sval2)    { $set .= "  --sval2\n";     }
     elsif(defined $opt_plain) { $set .= "  --plain\n";     }
     else                      { $default .= "  --plain\n"; }
 
     if(defined $opt_key) { $set .= "  --key\n"; }
 
-    $log = "log";
+    $log = "log.$timestamp";
     if(defined $opt_log) { 
 	$set .= "  --log $opt_log\n"; 
 	$log  = $opt_log;
@@ -1355,6 +1348,7 @@ sub setOptions {
 	$config = $opt_config;
 	$set .= "  --config $config\n";
     }
+
     if(defined $opt_realtime) {	$set .= "  --realtime\n"; }    
     if(defined $opt_debug)    {	$set .= "  --debug\n";    }
     
@@ -1439,11 +1433,32 @@ sub setOptions {
     }
 
     #  print settings
-    print STDERR "ParameterSettings:\n\n";
-    print STDERR "$default\n";
-    print STDERR "$set\n";
+    if($default ne "") { 
+	print STDERR "Default Options:\n";
+	print STDERR "$default\n";
+    }
+    if($set ne "") { 
+	print STDERR "UserOptions: \n";
+	print STDERR "$set\n";
+    }
 }
 
+##############################################################################
+#  function to create a timestamp
+##############################################################################
+sub time_stamp {
+    my ($stamp);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+
+    $year += 1900;
+    $mon++;
+    $d = sprintf("%4d%2.2d%2.2d",$year,$mon,$mday);
+    $t = sprintf("%2.2d%2.2d%2.2d",$hour,$min,$sec);
+    
+    $stamp = $d . $t;
+
+    return($stamp);
+}
 
 ##############################################################################
 #  function to output minimal usage notes
@@ -1561,7 +1576,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-targetword-senserelate.pl,v 1.2 2011/04/18 16:33:15 btmcinnes Exp $';
+    print '$Id: umls-targetword-senserelate.pl,v 1.3 2011/04/18 16:55:39 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
 }
 

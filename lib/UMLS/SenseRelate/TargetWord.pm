@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.16 2011/04/18 16:10:26 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.18 2011/05/03 13:58:58 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -152,30 +152,30 @@ sub assignSense {
     my %sensescores = ();
 
     #  get the possible senses of the target word
-    my @senses = ();
+    my $senses = undef;
     if(defined $senseref) { 
-	foreach my $sense (@{$senseref}) { push @senses, $sense; }
+	foreach my $sense (@{$senseref}) { push @{$senses}, $sense; }
     }
     else {
 	if($measure=~/vector|lesk/) { 
-	    @senses = $umls->getDefConceptList($target);
+	    $senses = $umls->getDefConceptList($target);
 	}
 	else {
-	    @senses = $umls->getConceptList($target);
+	    $senses = $umls->getConceptList($target);
 	}
     }
 
     #  check to make certain there exists a possible sense other
     #  wise return 
-    if($#senses < 0) { return undef; }
+    if($#{$senses} < 0) { return undef; }
     
     if(defined $trace) { 
 	print TRACE "TARGET WORD: $target\n";
-	print TRACE "POSSIBLE SENSES: @senses\n";
+	print TRACE "POSSIBLE SENSES: @{$senses}\n";
     }
     
     #  foreach sense determine the similarity
-    foreach my $sense (@senses) { 
+    foreach my $sense (@{$senses}) { 
 	
 	my $sensescore = 0; my $termcounter = 0;
 
@@ -186,9 +186,9 @@ sub assignSense {
 	    if($term=~/^\s*$/) { next; }
 	 
 	    #  get the term's CUI if it not one
-	    my @cuis = ();
+	    my $cuis = undef;
 	    if($term=~/C[0-9][0-9][0-9][0-9][0-9][0-9][0-9]/) { 
-		push @cuis, $term; 
+		push @{$cuis}, $term; 
 	    }
 	    else { 
 		$term = lc($term);
@@ -200,22 +200,22 @@ sub assignSense {
 
 		#  get the terms associated concepts
 		if($measure=~/vector|lesk/) { 
-		    @cuis = $umls->getDefConceptList($term); 
+		    $cuis = $umls->getDefConceptList($term); 
 		}
 		else {
-		    @cuis = $umls->getConceptList($term); 
+		    $cuis = $umls->getConceptList($term); 
 		}
 	    }
 
 	    if(defined $trace) { 
-		if($#cuis >= 0) { print TRACE "  Processing term: '$term' (@cuis)\n"; }
-		else            { print TRACE "  Processing term: '$term' (No Mapping)\n"; }
+		if($#{$cuis} >= 0) { print TRACE "  Processing term: '$term' (@{$cuis})\n"; }
+		else               { print TRACE "  Processing term: '$term' (No Mapping)\n"; }
 	    }
 
 	    #  get the highest similarity score between the 
 	    #  sense and the given cuis
 	    my $value = -1;
-	    foreach my $cui (@cuis) {
+	    foreach my $cui (@{$cuis}) {
 		my $score = "";
 
 		#  check if the similarity score is in the cache
@@ -514,7 +514,7 @@ options from the UMLS::Similarity package.
  $params{"measure"} = "path";
  $senserelate = UMLS::SenseRelate::TargetWord->new($umls, $meas, \%params);
 
-#  set the target word
+ #  set the target word
  my $tw = "adjustment";        
 
  #  provide an instance where the target word is in <head> tags
