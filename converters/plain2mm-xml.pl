@@ -360,7 +360,7 @@ sub convert_withTarget {
 		if($counter >= $location and $flag == 0) { 
 		    if($tcount == $location) { 
 			$method->set_tag('Target');
-			$method->set_atts({'id' => $id, 'sense' => $sense});
+			$method->set_atts({'item' => $tw, 'instance' => $id, 'sense' => $sense});
 			$flag = 1; 
 		    }
 		}
@@ -475,7 +475,7 @@ sub showHelp() {
 
 #  function to output the version number
 sub showVersion {
-        print '$Id: plain2mm-xml.pl,v 1.5 2011/04/18 16:31:41 btmcinnes Exp $';
+        print '$Id: plain2mm-xml.pl,v 1.6 2011/05/16 14:12:26 btmcinnes Exp $';
         print "\nCopyright (c) 2011, Ted Pedersen & Bridget McInnes\n";
 }
 

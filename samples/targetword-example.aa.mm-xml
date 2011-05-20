@@ -3,7 +3,7 @@
 <MMOs>
   <MMO>
     <CmdLine>
-      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110418103202/aa.20308399.tx.1.raw log.20110418103202/aa.20308399.tx.1.xml</Command>
+      <Command>metamap10.BINARY.Linux -Z 10 -% format log/aa.20308399.tx.1.raw log/aa.20308399.tx.1.xml</Command>
       <Options Count="4">
         <Option>
           <OptName>mm_data_year</OptName>
@@ -15,11 +15,11 @@
         </Option>
         <Option>
           <OptName>infile</OptName>
-          <OptValue>log.20110418103202/aa.20308399.tx.1.raw</OptValue>
+          <OptValue>log/aa.20308399.tx.1.raw</OptValue>
         </Option>
         <Option>
           <OptName>outfile</OptName>
-          <OptValue>log.20110418103202/aa.20308399.tx.1.xml</OptValue>
+          <OptValue>log/aa.20308399.tx.1.xml</OptValue>
         </Option>
       </Options>
     </CmdLine>
@@ -2917,7 +2917,7 @@
                 <InputMatch>aa</InputMatch>
                 <LexCat>noun</LexCat>
                 <Tokens Count="1">
-                  <Target id="20308399.tx.1" sense="C0002520">aa</Target>
+                  <Target instance="20308399.tx.1" item="aa" sense="C0002520">aa</Target>
                 </Tokens>
               </SyntaxUnit>
               <SyntaxUnit>
@@ -19215,7 +19215,7 @@
 <MMOs>
   <MMO>
     <CmdLine>
-      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110418103202/aa.20184306.tx.1.raw log.20110418103202/aa.20184306.tx.1.xml</Command>
+      <Command>metamap10.BINARY.Linux -Z 10 -% format log/aa.20184306.tx.1.raw log/aa.20184306.tx.1.xml</Command>
       <Options Count="4">
         <Option>
           <OptName>mm_data_year</OptName>
@@ -19227,11 +19227,11 @@
         </Option>
         <Option>
           <OptName>infile</OptName>
-          <OptValue>log.20110418103202/aa.20184306.tx.1.raw</OptValue>
+          <OptValue>log/aa.20184306.tx.1.raw</OptValue>
         </Option>
         <Option>
           <OptName>outfile</OptName>
-          <OptValue>log.20110418103202/aa.20184306.tx.1.xml</OptValue>
+          <OptValue>log/aa.20184306.tx.1.xml</OptValue>
         </Option>
       </Options>
     </CmdLine>
@@ -21915,7 +21915,7 @@
                 <InputMatch>aa</InputMatch>
                 <LexCat>noun</LexCat>
                 <Tokens Count="1">
-                  <Target id="20184306.tx.1" sense="C0002520">aa</Target>
+                  <Target instance="20184306.tx.1" item="aa" sense="C0002520">aa</Target>
                 </Tokens>
               </SyntaxUnit>
               <SyntaxUnit>
@@ -51602,7 +51602,7 @@
 <MMOs>
   <MMO>
     <CmdLine>
-      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110418103202/aa.20166661.tx.1.raw log.20110418103202/aa.20166661.tx.1.xml</Command>
+      <Command>metamap10.BINARY.Linux -Z 10 -% format log/aa.20166661.tx.1.raw log/aa.20166661.tx.1.xml</Command>
       <Options Count="4">
         <Option>
           <OptName>mm_data_year</OptName>
@@ -51614,11 +51614,11 @@
         </Option>
         <Option>
           <OptName>infile</OptName>
-          <OptValue>log.20110418103202/aa.20166661.tx.1.raw</OptValue>
+          <OptValue>log/aa.20166661.tx.1.raw</OptValue>
         </Option>
         <Option>
           <OptName>outfile</OptName>
-          <OptValue>log.20110418103202/aa.20166661.tx.1.xml</OptValue>
+          <OptValue>log/aa.20166661.tx.1.xml</OptValue>
         </Option>
       </Options>
     </CmdLine>
@@ -65259,7 +65259,7 @@
                 <InputMatch>aa</InputMatch>
                 <LexCat>noun</LexCat>
                 <Tokens Count="1">
-                  <Target id="20166661.tx.1" sense="C0002520">aa</Target>
+                  <Target instance="20166661.tx.1" item="aa" sense="C0002520">aa</Target>
                 </Tokens>
               </SyntaxUnit>
               <SyntaxUnit>

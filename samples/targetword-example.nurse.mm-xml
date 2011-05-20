@@ -3,7 +3,7 @@
 <MMOs>
   <MMO>
     <CmdLine>
-      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110418103325/nurse.20527656.raw log.20110418103325/nurse.20527656.xml</Command>
+      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110513093403/nurse.20527656.raw log.20110513093403/nurse.20527656.xml</Command>
       <Options Count="4">
         <Option>
           <OptName>mm_data_year</OptName>
@@ -15,11 +15,11 @@
         </Option>
         <Option>
           <OptName>infile</OptName>
-          <OptValue>log.20110418103325/nurse.20527656.raw</OptValue>
+          <OptValue>log.20110513093403/nurse.20527656.raw</OptValue>
         </Option>
         <Option>
           <OptName>outfile</OptName>
-          <OptValue>log.20110418103325/nurse.20527656.xml</OptValue>
+          <OptValue>log.20110513093403/nurse.20527656.xml</OptValue>
         </Option>
       </Options>
     </CmdLine>
@@ -13626,7 +13626,7 @@
                 <InputMatch>nurses</InputMatch>
                 <LexCat>noun</LexCat>
                 <Tokens Count="1">
-                  <Target id="20527656" sense="C0028661">nurses</Target>
+                  <Target instance="20527656" item="nurse" sense="C0028661">nurses</Target>
                 </Tokens>
               </SyntaxUnit>
               <SyntaxUnit>
@@ -18250,7 +18250,7 @@
 <MMOs>
   <MMO>
     <CmdLine>
-      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110418103325/nurse.20524417.raw log.20110418103325/nurse.20524417.xml</Command>
+      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110513093403/nurse.20524417.raw log.20110513093403/nurse.20524417.xml</Command>
       <Options Count="4">
         <Option>
           <OptName>mm_data_year</OptName>
@@ -18262,11 +18262,11 @@
         </Option>
         <Option>
           <OptName>infile</OptName>
-          <OptValue>log.20110418103325/nurse.20524417.raw</OptValue>
+          <OptValue>log.20110513093403/nurse.20524417.raw</OptValue>
         </Option>
         <Option>
           <OptName>outfile</OptName>
-          <OptValue>log.20110418103325/nurse.20524417.xml</OptValue>
+          <OptValue>log.20110513093403/nurse.20524417.xml</OptValue>
         </Option>
       </Options>
     </CmdLine>
@@ -18483,7 +18483,7 @@
                 <InputMatch>nurse</InputMatch>
                 <LexCat>noun</LexCat>
                 <Tokens Count="1">
-                  <Target id="20524417" sense="C0028661">nurse</Target>
+                  <Target instance="20524417" item="nurse" sense="C0028661">nurse</Target>
                 </Tokens>
               </SyntaxUnit>
             </SyntaxUnits>
@@ -19571,7 +19571,7 @@
 <MMOs>
   <MMO>
     <CmdLine>
-      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110418103325/nurse.20525464.raw log.20110418103325/nurse.20525464.xml</Command>
+      <Command>metamap10.BINARY.Linux -Z 10 -% format log.20110513093403/nurse.20525464.raw log.20110513093403/nurse.20525464.xml</Command>
       <Options Count="4">
         <Option>
           <OptName>mm_data_year</OptName>
@@ -19583,11 +19583,11 @@
         </Option>
         <Option>
           <OptName>infile</OptName>
-          <OptValue>log.20110418103325/nurse.20525464.raw</OptValue>
+          <OptValue>log.20110513093403/nurse.20525464.raw</OptValue>
         </Option>
         <Option>
           <OptName>outfile</OptName>
-          <OptValue>log.20110418103325/nurse.20525464.xml</OptValue>
+          <OptValue>log.20110513093403/nurse.20525464.xml</OptValue>
         </Option>
       </Options>
     </CmdLine>
@@ -29670,7 +29670,7 @@
                 <InputMatch>nurse</InputMatch>
                 <LexCat>noun</LexCat>
                 <Tokens Count="1">
-                  <Target id="20525464" sense="C0028661">nurse</Target>
+                  <Target instance="20525464" item="nurse" sense="C0028661">nurse</Target>
                 </Tokens>
               </SyntaxUnit>
             </SyntaxUnits>

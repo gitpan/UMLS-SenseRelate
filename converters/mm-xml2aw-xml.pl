@@ -240,12 +240,12 @@ foreach my $abstract (@abstracts) {
 	if($method->local_name eq "Mapping") { $flag = 1; }
 
 	#  if in mapping, get the cui
-	if( ($method->local_name eq "CandidateCUI") && ($flag = 1) ) { 
+	if( ($method->local_name eq "CandidateCUI") && ($flag == 1) ) { 
 	    my $cui = $method->text; push @cuis, $cui;
 	}
 
 	#  if in mapping, get the cui
-	if( ($method->local_name eq "CandidateMatched") && ($flag = 1) ) { 
+	if( ($method->local_name eq "CandidateMatched") && ($flag == 1) ) { 
 	    my $match = $method->text; 
 	    $match=~s/[\*\?\+\(\)\[\]\/ ]//g; 
 	    push @matches, lc($match);
@@ -345,7 +345,7 @@ sub showHelp() {
 
 #  function to output the version number
 sub showVersion {
-        print '$Id: mm-xml2aw-xml.pl,v 1.6 2011/04/18 16:31:41 btmcinnes Exp $';
+        print '$Id: mm-xml2aw-xml.pl,v 1.7 2011/05/16 14:12:26 btmcinnes Exp $';
         print "\nCopyright (c) 2007, Ted Pedersen & Bridget McInnes\n";
 }
 

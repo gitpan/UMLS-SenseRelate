@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::AllWords
-# (Last Updated $Id: AllWords.pm,v 1.6 2011/05/03 13:58:58 btmcinnes Exp $)
+# (Last Updated $Id: AllWords.pm,v 1.8 2011/05/20 15:17:08 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style WSD
 #
@@ -160,7 +160,7 @@ sub _setTargetWordSenseRelate {
     my $self = shift;
     
     my $function = "_setTargetWordSenseRelate";
-        
+    
     my %option_hash = ();
     
     $option_hash{"window"}   = $window;
@@ -189,8 +189,8 @@ sub assignSenses {
     my $self      = shift;
     my $instance  = shift;
     
-    my $function = "_assignSense";
-
+    my $function = "assignSenses";
+    
     #  check self
     if(!defined $self || !ref $self) {
 	$errorhandler->_error($pkg, $function, "", 1);
@@ -235,12 +235,12 @@ sub assignSenses {
 	}
 
 	#  remove the head information
-	$f=~s/<(head|sat) id=\"(.*?)\"( sats=\".*?\")?( possibles=\"(.*?))?( sense=\"(.*?))?>//g;  
+	$f=~s/<(head|sat) id=\"(.*?)\"( sats=\".*?\")?( candidates=\"(.*?))?( sense=\"(.*?))?>//g;  
 	$f=~s/<\/(head|sat)>//g;	
 	$e=~s/<(head|sat) id=\"(.*?)\"( sats=\".*?\")?>//g;  
-	$e=~s/<(head|sat) id=\"(.*?)\"( sats=\".*?\")?( possibles=\"(.*?))?( sense=\"(.*?))?>//g;  
+	$e=~s/<(head|sat) id=\"(.*?)\"( sats=\".*?\")?( candidates=\"(.*?))?( sense=\"(.*?))?>//g;  
 	$e=~s/<\/(head|sat)>//g;
-	$tw=~s/<(head|sat) id=\"(.*?)\"( sats=\".*?\")?( possibles=\"(.*?))?( sense=\"(.*?))?>//g;  
+	$tw=~s/<(head|sat) id=\"(.*?)\"( sats=\".*?\")?( candidates=\"(.*?))?( sense=\"(.*?))?>//g;  
 	$tw=~s/<\/(head|sat)>//g;
 	
 	#  set up the line for target word module
@@ -249,6 +249,9 @@ sub assignSenses {
 	#  clean the line and target word up
 	$line=~s/\'//g; $tw=~s/\'//g;
 	
+	#  remove before and after white space
+	$tw=~s/^\s+//g;	$tw=~s/\s+$//g;
+       
 	#  assign sense to the word
 	my $hashref = undef;
 	if(defined $senses) { 

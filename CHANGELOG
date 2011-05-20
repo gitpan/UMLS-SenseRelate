@@ -1,6 +1,20 @@
 NAME
     UMLS::SenseRelate CHANGES
 
+  Changes from version 0.11 to 0.13
+    1. add the option to use the default parameter files for the vector and
+    the information content files
+
+    2. added a aw-xml check to the all words disambiguation utils/ program.
+
+    3. added the --mmxml option to the target words disambiguation utils/
+    program
+
+    4. added the --candidate option to the target words disambiguation
+    utils/ program
+
+    5. added format checks to teh target words disambiguation utils/ program
+
   Changes from version 0.09 to 0.11
     1. added time stamp to the default log directory in
     umls-targetword-senserelate.pl - forgot that one
