@@ -132,6 +132,11 @@ The window in which to obtain the context surrounding the ambiguous term.
 
 Default: 2
 
+=head2 --restrict 
+
+This restricts the window to be contain the context whose terms maps 
+to UMLS, not just any old term
+
 =head3 --measure MEASURE
 
 Use the MEASURE module to calculate the semantic similarity. The 
@@ -472,7 +477,7 @@ use XML::Twig;
 use File::Spec;
 
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "compound", "trace=s", "undirected", "st")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "compound", "trace=s", "undirected", "st", "precision", "restrict")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 0;
@@ -1083,9 +1088,11 @@ sub load_UMLS_SenseRelate {
     
     $option_hash{"window"}   = $window;
 
-    if(defined $opt_compound) { $option_hash{"compound"} = $opt_compound; }
-    if(defined $opt_stoplist) { $option_hash{"stoplist"} = $opt_stoplist; }
-    if(defined $opt_trace)    { $option_hash{"trace"}    = $opt_trace;    }
+    if(defined $opt_compound) { $option_hash{"compound"}  = $opt_compound; }
+    if(defined $opt_stoplist) { $option_hash{"stoplist"}  = $opt_stoplist; }
+    if(defined $opt_trace)    { $option_hash{"trace"}     = $opt_trace;    }
+    if(defined $opt_precision){ $option_hash{"precision"} = $opt_precision; }
+    if(defined $opt_restrict) { $option_hash{"restrict"}  = $opt_restrict; }
 
     $option_hash{"measure"} = $measure;
 
@@ -1426,6 +1433,8 @@ sub setOptions {
 	$default .= "  --window 2\n";           
     }
 
+    if(defined $opt_restrict) { $set .= "  --restrict\n"; }
+
     if(defined $opt_compound) { $set .= "  --compound\n"; }
     
     if(defined $opt_trace) { 
@@ -1594,6 +1603,9 @@ sub showHelp() {
     print "--measure MEASURE        The measure to use to calculate the\n";
     print "                         semantic similarity. (DEFAULT: path)\n\n";
 
+    print "--restrict               This restricts the window to be contain the \n";
+    print "                         context whose terms maps to a UMLS concept\n\n";
+
     print "--window N               The context used to disambiguate the target word.\n";
     print "                         Default: 2\n\n";
 
@@ -1680,7 +1692,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-targetword-senserelate.pl,v 1.9 2011/05/20 19:09:12 btmcinnes Exp $';
+    print '$Id: umls-targetword-senserelate.pl,v 1.11 2011/07/07 21:22:37 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
 }
 

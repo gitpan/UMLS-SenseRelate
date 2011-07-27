@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.18 2011/05/03 13:58:58 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.23 2011/07/27 14:03:08 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -49,9 +49,10 @@ use UMLS::Similarity;
 use UMLS::SenseRelate::ErrorHandler;
 
 #  module handler variables
-my $umls         = "";
+my $umls          = "";
 my $mhandler      = "";
-my $errorhandler = "";
+my $errorhandler  = "";
+my $floatformat   = "";
 
 #  senserelate options
 my $stoplist      = undef;
@@ -60,6 +61,8 @@ my $window        = undef;
 my $compound      = undef;
 my $trace         = undef;
 my $measure       = undef;
+my $precision     = undef;
+my $restrict      = undef;
 
 local(*TRACE);
 
@@ -146,7 +149,10 @@ sub assignSense {
 
     #  get the terms or CUIs in the specified window of the instance
     my $line = $self->_getWindow($instance);    
-    my @terms = split/\s+/, $line;
+    my @terms = @{$line};
+
+    #  get the instance id
+    my $id = $self->_getId($instance);
 
     #  initialize the return hash containing the senses and the scores
     my %sensescores = ();
@@ -170,6 +176,7 @@ sub assignSense {
     if($#{$senses} < 0) { return undef; }
     
     if(defined $trace) { 
+	print TRACE "INSTANCE: $id\n";
 	print TRACE "TARGET WORD: $target\n";
 	print TRACE "POSSIBLE SENSES: @{$senses}\n";
     }
@@ -187,17 +194,27 @@ sub assignSense {
 	 
 	    #  get the term's CUI if it not one
 	    my $cuis = undef;
-	    if($term=~/C[0-9][0-9][0-9][0-9][0-9][0-9][0-9]/) { 
-		push @{$cuis}, $term; 
+	    
+	    #  if restrict is defined get the possible cuis -> this should be an array of arrays
+	    if(defined $restrict) { 
+		my @c = split/\|/, $term;
+		foreach my $cui (@c) { 
+		    push @{$cuis}, $cui; 
+		}
 	    }
+	    #  if the term is just a cuis which really shouldn't happen but who knows
+	    elsif($term=~/C[0-9][0-9][0-9][0-9][0-9][0-9][0-9]/) {
+		push @{$cuis}, $term;
+	    }
+	    #  the term is just a term so get the cuis
 	    else { 
 		$term = lc($term);
 		$term=~s/[\<\>\.\,\?\/\!\@\#\$\%\^\&\*\(\)\[\]\{\}\'\"\:\;\\]//g;
-
+		
 		#  if the compound option is defined the instance contains 
 		#  compounds which are denoted by an underscore
 		if(defined $compound) { $term=~s/_/ /g; }
-
+		
 		#  get the terms associated concepts
 		if($measure=~/vector|lesk/) { 
 		    $cuis = $umls->getDefConceptList($term); 
@@ -223,7 +240,8 @@ sub assignSense {
 
 		#  otherwise go get it and then put it there
 		else { 
-		    $score = $mhandler->getRelatedness($sense, $cui); 
+		    my $relatedness = $mhandler->getRelatedness($sense, $cui); 
+		    $score = sprintf $floatformat, $relatedness;
 		    $cache{$sense}{$cui} = $score;
 		}
 	
@@ -279,6 +297,19 @@ sub assignSense {
     return \%returnhash;
 }
 
+sub _getId {
+
+    my $self     = shift;
+    my $instance = shift;
+
+    #  get the id
+    $instance=~/<head item=\"(.*?)\" instance=\"(.*?)\">(.*?)<\/head>/;
+    my $tw     = $1;
+    my $id     = $2;
+
+    return $id;
+}
+
 #  method obtains the terms in the window from the instance
 #  input : $instance <- string containing the full instance
 #  output: $line     <- string containing the terms in the window
@@ -305,14 +336,19 @@ sub _getWindow {
 	$errorhandler->_error($pkg, $function, $str, 5);
     }
     
+    
     #  get the words or CUIs surrounding the target word
     $instance=~/^(.*?)<head item=\"(.*?)\" instance=\"(.*?)\">(.*?)<\/head>(.*?)$/;
     my $before = $1;
     my $tw     = $2;
     my $id     = $3;
     my $after  = $5;
-
-    my $line = "";
+    
+    #  remove punctuation right now
+    if(defined $before) { $before=~s/[\.\,\:\;\"\']//g; }
+    if(defined $after)  { $after=~s/[\.\,\:\;\"\']//g;  }
+    
+    my @line = ();
 
     # if the window size is not defined we just use the entire context
     if(! defined $window) { 
@@ -327,17 +363,33 @@ sub _getWindow {
 	$instance=~s/^\s*//g; 
 	$instance=~s/\s*$//g;
 	
-	#  if stoplist defined remove the stoplist terms
-	if(defined $stopregex) { 
-	    my @array = split/\s+/, $instance;
-	    foreach my $term (@array) { 
-		if(! ($term=~/$stopregex/)) {
-		    $line .= "$term ";
-		}
+
+	my @array = split/\s+/, $instance;
+	foreach my $term (@array) { 
+
+	    #  clean up the term
+	    $term=~s/[\<\>\.\,\?\/\!\@\#\$\%\^\&\*\(\)\[\]\{\}\'\"\:\;\\]//g;
+
+	    #  if stoplist defined remove the stoplist terms
+	    if(defined $stopregex) { 
+		if(defined $compound) { $term=~s/_/ /g; }
+		if(! ($term=~/$stopregex/)) { next; }
 	    }
+
+	    #  if restrict is defined get the terms concept
+	    if(defined $restrict) { 
+		my $cuis = "";
+		if(defined $compound) { $term=~s/_/ /g; }
+		if($measure=~/vector|lesk/) { 
+		    $cuis = $umls->getDefConceptList($term); 
+		}
+		else {
+		    $cuis = $umls->getConceptList($term); 
+		}
+		push @line, $cuis;
+	    }
+	    else { push @line, $term; }
 	}
-	#  otherwise just use the entire instance as is
-	else { $line = $instance; }
 	
     }
     #  otherwise get the terms from the window
@@ -358,7 +410,7 @@ sub _getWindow {
 	my @beforearray = split/\s+/, $before;
 	my @afterarray = split/\s+/, $after;
 	
-	#  add those terms in the window to the return string $line
+	#  add those terms in the window to the return reference to array line
 	my $bi = 1; my $ai = 1;
 	while($bi <= $window || $ai <= $window) { 
 	    
@@ -368,25 +420,54 @@ sub _getWindow {
 	    if($#beforearray > -1) { $beforeterm = pop @beforearray; }
 	    if($#afterarray > -1)  { $afterterm = shift @afterarray; }
 	    
+	    if($#afterarray < 0 && $#beforearray < 0) { $bi = $window + 1; $ai = $window + 1; }
+
+	    $beforeterm=~s/[\<\>\.\,\?\/\!\@\#\$\%\^\&\*\(\)\[\]\{\}\'\"\:\;\\]//g;
+	    $afterterm=~s/[\<\>\.\,\?\/\!\@\#\$\%\^\&\*\(\)\[\]\{\}\'\"\:\;\\]//g;
+	    
+	    my $bflag = 0; 
+	    my $aflag = 0;
+
 	    #  if there is a stoplist only add those non-stopword terms
 	    if(defined $stopregex) { 
-		if(! ($beforeterm=~/$stopregex/)) {
-		    $line .= "$beforeterm "; $bi++;
-		}
-		if(! ($afterterm=~/$stopregex/)) { 
-		    $line .= "$afterterm "; $ai++;
-		}
+		if($beforeterm=~/$stopregex/) { $bflag = 1; }
+		if($afterterm=~/$stopregex/)  { $aflag = 1; }
 	    }
-	    #  other wise just add what is given
-	    else {
-		$line .= "$beforeterm $afterterm ";
-		$ai++; $bi++;
+	
+	    #  if restrict is defined only add the cuis
+	    if(defined $restrict) { 
+		
+		my $bcuis = undef; my $acuis = undef;
+		if($measure=~/vector|lesk/) { 
+		    if($bflag == 0) { $bcuis = $umls->getDefConceptList($beforeterm); }
+		    if($aflag == 0) { $acuis = $umls->getDefConceptList($afterterm);  }
+		}
+		else {
+		    if($bflag == 0) { $bcuis = $umls->getConceptList($beforeterm); }
+		    if($aflag == 0) { $acuis = $umls->getConceptList($afterterm);  }
+		}
+		
+
+		if(defined $bcuis) { 
+		    my $b = join "|", @{$bcuis};
+		    if(! ($b=~/^\s*$/) ) { if($bi <= $window) { push @line, $b; $bi++; } }
+		}
+		if(defined $acuis) { 
+		    my $a = join "|", @{$acuis};
+		    if(! ($a=~/^\s*$/) ) { if($ai <= $window) { push @line, $a; $ai++; } }
+		}
+		
+	    }   
+	    #  otherwise add the terms
+	    else { 
+		if($bflag == 0) { if($bi <= $window) { push @line, $beforeterm; $bi++; } }
+		if($aflag == 0) { if($ai <= $window) { push @line, $afterterm;  $ai++; } }
 	    }
 	}
     }
     
     #  return the string containing the terms (or CUIs) in the window
-    return $line;
+    return \@line;
 }
 
 #  method sets the parameters for the UMLS::SenseRelate package
@@ -412,6 +493,8 @@ sub _setOptions {
     $compound      = $params->{'compound'};
     $trace         = $params->{'trace'};
     $measure       = $params->{'measure'};
+    $precision     = $params->{'precision'};
+    $restrict      = $params->{'restrict'};
 
     #  set the stoplist
     if(defined $stoplist) { 
@@ -426,6 +509,14 @@ sub _setOptions {
     #  set the measure
     if(! (defined $measure)) { 
 	$measure = "path";
+    }
+
+    #  set the precision
+    if(defined $precision) { 
+	$floatformat = join '', '%', '.', $precision, 'f';
+    }
+    else { 
+	$floatformat = join '', '%', '.', 4, 'f';
     }
 }
 
@@ -563,6 +654,9 @@ with other parameters, unless you know what you're doing.
   'window  '     -> This parameter determines the window size of the 
                     context on each side of the target word to be used 
                     for disambiguation
+
+  'restrict'     -> This parameter restricts the context to be only 
+                    terms/words that map to concepts in the UMLS
 
   'stoplist'     -> This parameter disregards stopwords when creating 
                     the window created on the fly (in realtime). 
