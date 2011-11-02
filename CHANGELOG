@@ -1,6 +1,14 @@
 NAME
     UMLS::SenseRelate CHANGES
 
+  Changes from version 0.15 to 0.17
+    1. added a --cuis option to use the surrounding CUIs obtained by MetaMap
+    when using the --mmxml formatted input file
+
+    2. speed things up - working more on this
+
+    3. added --loadcache and --dumpcache options
+
   Changes from version 0.13 to 0.15
     1. added a --restrict option which uses only the terms that have a
     mapping to a UMLS concept in the window - similar to --stoplist only

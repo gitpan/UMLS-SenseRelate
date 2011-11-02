@@ -85,6 +85,10 @@ called: plain2mm-xml.pl
 This option uses the candidate senses as identified by metamap for 
 the target word. This option can only be used with the --mmxml option. 
 
+=head3 --cuis
+
+This option uses the CUIs tagged by metamap not the terms
+
 =head3 --senses DIR|File
 
 This is the directory that contains the candidate sense file for each 
@@ -262,6 +266,16 @@ input concept
 This option will bypass any command prompts such as asking 
 if you would like to continue with the index creation. 
 
+=head3 --loadcache FILE
+
+FILE containing similarity scores of cui pairs in the following 
+format: 
+
+  score<>CUI1<>CUI2
+
+=head3 --getcache FILE
+
+Outputs the cache into FILE once the program has finished. 
 
 =head2 UMLS-Interface Debug Options: 
 
@@ -477,7 +491,7 @@ use XML::Twig;
 use File::Spec;
 
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "compound", "trace=s", "undirected", "st", "precision", "restrict")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 0;
@@ -506,6 +520,7 @@ if(scalar(@ARGV) < 1) {
 my $source = shift;
 
 #  initialize variables
+my $stopregex     = undef;
 my $precision     = "";
 my $floatformat   = "";
 my $measure       = "";
@@ -525,7 +540,6 @@ my $umls        = &load_UMLS_Interface();
 my $meas        = &load_UMLS_Similarity();
 my $senserelate = &load_UMLS_SenseRelate();
 
-
 #  get the senses
 if(defined $opt_senses) {
    &setSenses();
@@ -539,7 +553,13 @@ if(defined $opt_key) {
    &setKey();
 }
 
+#  assign senses
 &assignSenses();
+
+#  get the cache if requested
+if(defined $opt_getcache) { 
+    $senserelate->dumpCache($opt_getcache);
+}
 
 print STDERR "The results will be found in the $log directory\n";
 
@@ -754,84 +774,77 @@ sub load_MetaMap_Input {
         
     my @abstracts = (); my $abstract = "";
     while(<INPUT>) { 
+
 	if($_=~/\<?xml version/) { 
 	    if($abstract ne "") { push @abstracts, $abstract; }
 	    $abstract = "";
 	}
-	$abstract .= $_;
-    }
-    
-    my $abstractid = 0; 
-    if($#abstracts < 0) { 
-	print STDERR "\nERROR. This file does not seem to be in the proper format.\n";
-	print STDERR "Please check the format of your input file.\n\n";
-	&minimalUsageNotes();
-	exit;
-    }
-
-    foreach my $abstract (@abstracts) { 
-	
-	if($abstract=~/^\s*$/) { next; }
-	
-	if($abstract=~/<instance id>/) { 
+	if($_=~/<instance id>/) { 
 	    print STDERR "\nERROR. This file looks like it is in sval2 format.\n";
 	    print STDERR "Please check the format of your input file.\n\n";
 	    &minimalUsageNotes();
 	    exit;
 	}
-	if($abstract=~/<head item=>/) { 
+	if($_=~/<head item=>/) { 
 	    print STDERR "\nERROR. This file looks like it is in plain format.\n";
 	    print STDERR "Please check the format of your input file.\n\n";
 	    &minimalUsageNotes();
 	    exit;
 	}
 	
+	$abstract .= $_;
+    }
+    
+    foreach my $abstract (@abstracts) { 
 
-	# increment id
-	$abstractid++;
-	
-	#  print document id
-	my $aid = sprintf("%03d", $abstractid);
-	print OUTFILE "<text id=\"$aid\">\n";
-	
-	#  set the xml file for this abstract
-	if(-e "$inputfile.processing") { system "rm $inputfile.processing"; }
-	open(FILE, ">$inputfile.processing") || 
-	    die "Could not open $infile.processing\n";
-	print FILE "$abstract";	close FILE;
-	
-	#  load the metamap xml output
-	my $t= XML::Twig->new();
-	$t->parsefile("$inputfile.processing");
-	my $root = $t->root;
-	
 	#  initialize the instance variables
-	my $id = ""; my $tw = ""; my $item = ""; my $sense = ""; 
-	my $method= $root; my $tokenid = 0; my $tflag = 0;
-	my @tokens = (); my @cuis = (); my @matches = (); 
-	my %candidates = ();
-
-	#  loop through tokens
-	while( $method=$method->next_elt( $root )) { 
-
-	    if($method->local_name eq "UttText") { 
-		$sentenceid++; 
-		$tokenid = 0;
-	    }
+	my $id    = ""; my $flag    = 0; my @tokens  = (); my %candidates = ();
+	my $tw    = ""; my $tflag   = 0; my @cuis    = (); 
+	my $item  = ""; my $mflag   = 1;
+	my $sense = "";                   
+ 	
+	#  split on the new line character
+	my @lines = split/\n/, $abstract;
+	
+	foreach my $i (0..$#lines) { 
 	    
+	    my $line = $lines[$i];
+	
+
 	    #  get the tokens
-	    if($method->local_name eq "InputMatch") { 
-		my $token = $method->text; push @tokens, $token;
+	    if($line=~/<InputMatch>(.*?)<\/InputMatch>/) { 
+		
+		#  get the tokens
+		my $token = $1;
+		
+		#  remove the puncutation
+		$token=~s/[\.\,\(\)\%\-\:\/\=\+\;]//g;
+		
+		#  remove multiple spaces
+		$token=~s/\s+/ /g; $token=~s/^\s+//g; $token=~s/\s+$//g;
+
+		#  if defined compound underscore the mwe's
+		if(defined $opt_compound) { $token=~s/ /_/g; }
+
+		#  add token if it is just spaces
+		if(! ($token=~/^\s*$/) ) { push @tokens, $token; }
+
+		#  set the flags
+		$flag = 0;
 	    }
 	    
 	    #  check if target word
-	    if($method->local_name eq "Target") { 
+	    if($line=~/Target instance=\"(.*?)\" item=\"(.*?)\" sense=\"(.*?)\">/) { 
 		
 		#  get the attributes
-		$id=$method->att('instance');
-		$tw=$method->att('item');
-		$sense=$method->att('sense');
-		
+		$id=$1;
+		$tw=$2;
+		$sense=$3;
+
+		#  set the flag 
+		$tflag = 1;
+		$flag  = 0;
+	    
 		#  remove the target word
 		my $target = pop @tokens;
 		
@@ -844,6 +857,7 @@ sub load_MetaMap_Input {
 
 		#  add the updated target word
 		push @tokens, $item;
+		push @cuis, $item;
 		
 		#  if the key is defined add sense to the key hash
 		if(defined $opt_key) { 
@@ -852,48 +866,52 @@ sub load_MetaMap_Input {
 	    }
 	    
 	    #  check if in mapping
-	    if($method->local_name eq "Mapping") { $flag = 1; }
-	    
-	    #  if in mapping, get the cui
-	    if( ($method->local_name eq "CandidateCUI") && ($flag == 1) ) { 
-		my $cui = $method->text; push @cuis, $cui;
+	    if($line=~/<Mappings Count=\"(.*?)\"/) { 
+		$flag = $1; $mflag = 1; 
 	    }
 
-	    #  if in mapping, get the cui
-	    if( ($method->local_name eq "CandidateMatched") && ($flag == 1) ) { 
-		my $match = $method->text; 
-		$match=~s/[\*\?\+\(\)\[\]\/ ]//g; 
-		push @matches, lc($match);
+	    #  set the tflag off when mappings are finished regardless 	    
+	    if($line=~/<\/Mappings>/) { 
+		$flag  = 0; $tflag = 0; $mflag = 0; 
 	    }
-	    
-	    if($method->local_name eq "Phrase") { 
+
+	    #  get the cuis of the mapping                       
+	    if($line=~/<CandidateCUI>(.*?)<\/CandidateCUI>/) {
+		my $cui = $1; 
 		
-		my %mappings = ();
-		foreach my $i (0..$#matches) { 
-		    my $term = $matches[$i]; my $mflag = 0;
-		    while($mflag == 0) {
-			foreach my $token (@tokens) {
-			    my $word = $token;
-			    if($token=~/<head (.*?)>(.*?)<\/head>/) {
-				$word = $2;
-			    } 
-			    else { $token=lc($token); }
-			    if($word=~/$term/) {
-				if($token=~/<head/) { 
-				    $candidates{$cuis[$i]}++;
-				}
-				$mappings{$token}{"$cuis[$i]/$matches[$i]"}++;
-				$mflag = 1; 
-			    }
-			}
-			chop $term;
-			if($term=~/^\s*$/) { $mflag = 1; }
+		#  check if it is the target word
+		if( ($tflag == 1) ) { 
+		    #  get the cui and store it in the candidates
+		    if(defined $opt_candidates) { 
+			$candidates{$cui}++; 
 		    }
 		}
-	    }
-	    
-	}
+		
+		#  if in mapping that is not the target word, get the cui
+		 if( (defined $opt_cuis) && ($flag > 0)  && ($tflag == 0) ) { 
 
+		     #  get the cui and the match
+		     $lines[$i+1]=~/<CandidateMatched>(.*?)<\/CandidateMatched>/;
+		     my $match = lc($1);
+
+		     #  if stoplist is defined check to make certain that it is not
+		     #  a stopword and then add it to the list if all is good
+		     my $keep = 1;
+		     if(defined $opt_stoplist) { if(! ($match=~/$stopregex/)) { $keep = 1; } }
+
+		     if($keep == 1) { 
+			 if($mflag == 1) { push @cuis, $cui; }
+			 else { 
+			     my $c = pop @cuis;
+			     $c .= "/$cui";
+			     push @cuis, $c;
+			 }
+		     }
+		     $mflag++;
+		 }
+	    }
+	}
+	
 	#  store the candidates in the candidate hash if defined
 	if(defined $opt_candidates) { 
 	    my @senses = ();
@@ -903,11 +921,14 @@ sub load_MetaMap_Input {
 	}
 	
 	#  store instance in the hash
-	$instancehash{$tw}{$id} = join " ", @tokens;
-	
-	#  remove the processing file
-	system "rm $inputfile.processing"; 
+	if(defined $opt_cuis) { 
+	    $instancehash{$tw}{$id} = join " ", @cuis;
+	}
+	else { 
+	    $instancehash{$tw}{$id} = join " ", @tokens;
+	}
     }
+    
 }
 
 #  loads the instances in plain format in to the instance hash
@@ -1003,7 +1024,10 @@ sub load_Plain_Input {
 	
 	#  store the insance
 	$instancehash{$tw}{$id} = $instance;
-	 
+	
+	
+	
+
 	#  store the candidate infromtion 
 	if(defined $opt_candidates) { 
 	    my @array = split/\,/, $candidate;
@@ -1091,11 +1115,13 @@ sub load_UMLS_SenseRelate {
     if(defined $opt_compound) { $option_hash{"compound"}  = $opt_compound; }
     if(defined $opt_stoplist) { $option_hash{"stoplist"}  = $opt_stoplist; }
     if(defined $opt_trace)    { $option_hash{"trace"}     = $opt_trace;    }
-    if(defined $opt_precision){ $option_hash{"precision"} = $opt_precision; }
+    if(defined $opt_precision){ $option_hash{"precision"} = $opt_precision;}
     if(defined $opt_restrict) { $option_hash{"restrict"}  = $opt_restrict; }
-
+    if(defined $opt_cuis)     { $option_hash{"cuis"}      = $opt_cuis;     }
+    if(defined $opt_loadcache){ $option_hash{"loadcache"} = $opt_loadcache;}
+    
     $option_hash{"measure"} = $measure;
-
+    
     my $handler = UMLS::SenseRelate::TargetWord->new($umls, $meas, \%option_hash); 
     die "Unable to create UMLS::SenserRelateTargetWord object.\n" if(!$handler);
     
@@ -1268,7 +1294,13 @@ sub checkOptions {
 	&minimalUsageNotes();
 	exit;
     }
-	
+
+    if((defined $opt_cuis) && (! (defined $opt_mmxml) )) { 
+	print STDERR "The --cuis option is only available for the mmxml format.\n";
+	&minimalUsageNotes();
+	exit;
+    }
+
     if(defined $opt_measure) {
 	if($opt_measure=~/\b(path|wup|lch|cdist|nam|vector|res|lin|random|jcn|lesk)\b/) {
 	    #  good to go
@@ -1374,6 +1406,25 @@ sub checkOptions {
     }
 }
 
+#  method sets the stoplist
+#  input : $stoplist <- file containing stoplist
+#  output: $regex    <- string containing regex
+sub setStopList {
+
+    if($debug) { print STDERR "In setStopList\n"; }    
+
+    open(STOP, $opt_stoplist) || die "Could not open $opt_stoplist\n";
+    $stopregex = "(";
+    while(<STOP>) { 
+	chomp;
+	$_=~s/^\///g;
+	$_=~s/\/$//g;
+	$stopregex .= "$_|";
+    }
+    chop $stopregex;
+    $stopregex .= ")";
+}
+
 #  set user input and default options
 sub setOptions {
 
@@ -1421,8 +1472,12 @@ sub setOptions {
     
     #  UMLS::SenseRelate Options
     if(defined $opt_senses)     { $set .= "  --senses $opt_senses\n";     }    
-    if(defined $opt_stoplist)   { $set .= "  --stoplist $opt_stoplist\n"; }
     if(defined $opt_candidates) { $set .= "  --candidates\n";             }
+
+    if(defined $opt_stoplist)   { 
+	$set .= "  --stoplist $opt_stoplist\n"; 
+	&setStopList();
+    }
 
     if(defined $opt_window)   { 
 	$window = $opt_window;
@@ -1598,11 +1653,16 @@ sub showHelp() {
     
     print "--mmxml                  INPUTFILE is in mmxml format.\n\n";
 
-    print "--senses FILE|DIR        File or directory containing the sense files\n\n";
+    print "--candidates             Uses the candidate senses as identified\n";
+    print "                         by metamap for the target word. \n\n";
 
+    print "--cuis                   Use the CUIs tagged by metamap not the terms\n\n";
+
+    print "--senses FILE|DIR        File or directory containing the sense files\n\n";
+    
     print "--measure MEASURE        The measure to use to calculate the\n";
     print "                         semantic similarity. (DEFAULT: path)\n\n";
-
+    
     print "--restrict               This restricts the window to be contain the \n";
     print "                         context whose terms maps to a UMLS concept\n\n";
 
@@ -1621,6 +1681,10 @@ sub showHelp() {
     print "                         score in plain or sval tex.\n\n"; 
 
     print "--trace FILE             This stores the trace information in FILE for debugging.\n\n";
+
+    print "--loadcache FILE         FILE containing similarity scores of cui pairs.\n\n";
+    
+    print "--getcache FILE         Outputs the cache into FILE \n\n";
 
     print "--version                Prints the version number\n\n";
     
@@ -1692,7 +1756,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-targetword-senserelate.pl,v 1.11 2011/07/07 21:22:37 btmcinnes Exp $';
+    print '$Id: umls-targetword-senserelate.pl,v 1.15 2011/11/02 14:22:24 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
 }
 

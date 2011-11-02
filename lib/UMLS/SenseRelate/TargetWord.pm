@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.23 2011/07/27 14:03:08 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.28 2011/11/02 14:22:24 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -63,6 +63,8 @@ my $trace         = undef;
 my $measure       = undef;
 my $precision     = undef;
 my $restrict      = undef;
+my $usingcuis     = undef; 
+my $loadcache     = undef;
 
 local(*TRACE);
 
@@ -117,7 +119,7 @@ sub new {
     return $self;
 }
 
-#  method sets the stoplist
+#  method assigns senses to a target word in a given instance
 #  input : $senses    <- reference to an array containing 
 #                        the CUIs of the possible senses
 #          $instance  <- string containing the instance
@@ -202,9 +204,12 @@ sub assignSense {
 		    push @{$cuis}, $cui; 
 		}
 	    }
-	    #  if the term is just a cuis which really shouldn't happen but who knows
+	    #  if the term is just a cuis 
 	    elsif($term=~/C[0-9][0-9][0-9][0-9][0-9][0-9][0-9]/) {
-		push @{$cuis}, $term;
+		while($term=~/(C[0-9][0-9][0-9][0-9][0-9][0-9][0-9])/g) { 
+		    my $c = $1;
+		    push @{$cuis}, $c;
+		}
 	    }
 	    #  the term is just a term so get the cuis
 	    else { 
@@ -236,8 +241,13 @@ sub assignSense {
 		my $score = "";
 
 		#  check if the similarity score is in the cache
-		if(exists $cache{$sense}{$cui}) { $score = $cache{$sense}{$cui}; }
-
+		if(exists $cache{$sense}{$cui}) { 
+		    $score = $cache{$sense}{$cui}; 
+		    if($debug) { 
+			print STDERR "using cache: $sense $cui = $score\n"; 
+		    }
+		}
+		
 		#  otherwise go get it and then put it there
 		else { 
 		    my $relatedness = $mhandler->getRelatedness($sense, $cui); 
@@ -470,6 +480,24 @@ sub _getWindow {
     return \@line;
 }
 
+#  method dumps cache to given file
+#  input : $file <- file name
+#  output:
+sub dumpCache {
+
+    my $self = shift;
+    my $file = shift;
+    
+    open(CACHE, ">$file") || die "Could not open $file\n";
+    foreach my $c1 (sort keys %cache) { 
+	foreach my $c2 (sort keys %{$cache{$c1}}) {
+	    print CACHE "$cache{$c1}{$c2}<>$c1<>$c2\n";
+	}
+    }
+    close CACHE;
+}
+    
+
 #  method sets the parameters for the UMLS::SenseRelate package
 #  input : $params <- reference to hash containing the parameters 
 #  output:
@@ -495,6 +523,21 @@ sub _setOptions {
     $measure       = $params->{'measure'};
     $precision     = $params->{'precision'};
     $restrict      = $params->{'restrict'};
+    $usingcuis     = $params->{'cuis'};
+    $loadcache     = $params->{'loadcache'};
+
+    if(defined $loadcache) { 
+	if($debug) { print STDERR "Loading Cache\n"; }
+	open(CACHE, $loadcache) || die "Could not open $loadcache\n";
+	while(<CACHE>) { 
+	    chomp;
+	    my ($score, $c1, $c2) = split/<>/;
+	    $cache{$c1}{$c2} = $score;
+	    $cache{$c2}{$c1} = $score;
+	}
+	if($debug) { print STDERR "Finished Loading Cache\n"; }
+	close CACHE;
+    }
 
     #  set the stoplist
     if(defined $stoplist) { 
