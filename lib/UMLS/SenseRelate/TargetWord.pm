@@ -1,9 +1,9 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.28 2011/11/02 14:22:24 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.32 2012/04/13 22:09:37 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
-# Copyright (c) 2010-2011,
+# Copyright (c) 2010-2012,
 #
 # Bridget T. McInnes, University of Minnesota, Twin Cities
 # bthomson at umn.edu
@@ -48,6 +48,9 @@ use UMLS::Interface;
 use UMLS::Similarity;
 use UMLS::SenseRelate::ErrorHandler;
 
+use vars qw($VERSION);
+$VERSION = '0.05';
+
 #  module handler variables
 my $umls          = "";
 my $mhandler      = "";
@@ -65,6 +68,7 @@ my $precision     = undef;
 my $restrict      = undef;
 my $usingcuis     = undef; 
 my $loadcache     = undef;
+my $weight        = undef;
 
 local(*TRACE);
 
@@ -189,20 +193,44 @@ sub assignSense {
 	my $sensescore = 0; my $termcounter = 0;
 
 	if(defined $trace) { print TRACE " Processing sense ($sense)\n"; }
+	
+	#  find the target word for weighting 
+	my $tloc = 0; my $tcount = 0;
+	for(my $i = 0; $i <= $#terms; $i++) { 
+	    if($terms[$i]=~/^\s*$/)    { next;            }
+	    $tcount++;
+	    if($terms[$i]=~/<TARGET>/) { $tloc = $tcount; } 
+	}
+	
+	my $tflag = 0; my $counter = 0;
+	for(my $i = 0; $i <= $#terms; $i++) { 
 
-	foreach my $term (@terms) { 
-	    
+	    #  get the term
+	    my $term = $terms[$i];
+
+	    #  ignore if nothing -- just a check
 	    if($term=~/^\s*$/) { next; }
-	 
+
+	    #  increment the counter dictacting what word we are on
+	    $counter++; 
+
+	    #  added a <TARGET> flag for the weighting
+	    if($term=~/<TARGET>/) { $tflag = 1; next; }
+
+	    #  get the weight of the term if defined
+	    my $wdelta = 0;
+	    if(defined $weight) { 
+		if($tflag == 0) { $wdelta = 1/($tloc - $counter);  }
+		else            { $wdelta = 1/($counter - $tloc);  }
+	    }
+
 	    #  get the term's CUI if it not one
 	    my $cuis = undef;
 	    
 	    #  if restrict is defined get the possible cuis -> this should be an array of arrays
 	    if(defined $restrict) { 
 		my @c = split/\|/, $term;
-		foreach my $cui (@c) { 
-		    push @{$cuis}, $cui; 
-		}
+		foreach my $cui (@c) { push @{$cuis}, $cui; }
 	    }
 	    #  if the term is just a cuis 
 	    elsif($term=~/C[0-9][0-9][0-9][0-9][0-9][0-9][0-9]/) {
@@ -252,6 +280,9 @@ sub assignSense {
 		else { 
 		    my $relatedness = $mhandler->getRelatedness($sense, $cui); 
 		    $score = sprintf $floatformat, $relatedness;
+		    if(defined $weight) { 
+			$score = $score * $wdelta;
+		    }
 		    $cache{$sense}{$cui} = $score;
 		}
 	
@@ -281,7 +312,6 @@ sub assignSense {
 	if(defined $trace) { 
 	    print TRACE " Overall similarity for $sense = $sensescore\n"; 
 	}
-
     }
 
     #  right now we are just returning a single sense and its
@@ -346,7 +376,6 @@ sub _getWindow {
 	$errorhandler->_error($pkg, $function, $str, 5);
     }
     
-    
     #  get the words or CUIs surrounding the target word
     $instance=~/^(.*?)<head item=\"(.*?)\" instance=\"(.*?)\">(.*?)<\/head>(.*?)$/;
     my $before = $1;
@@ -358,7 +387,9 @@ sub _getWindow {
     if(defined $before) { $before=~s/[\.\,\:\;\"\']//g; }
     if(defined $after)  { $after=~s/[\.\,\:\;\"\']//g;  }
     
-    my @line = ();
+    my @line  = ();
+    my @bline = ();
+    my @aline = ();
 
     # if the window size is not defined we just use the entire context
     if(! defined $window) { 
@@ -460,25 +491,36 @@ sub _getWindow {
 
 		if(defined $bcuis) { 
 		    my $b = join "|", @{$bcuis};
-		    if(! ($b=~/^\s*$/) ) { if($bi <= $window) { push @line, $b; $bi++; } }
+		    if(! ($b=~/^\s*$/) ) { if($bi <= $window) { push @bline, $b; $bi++; } }
 		}
 		if(defined $acuis) { 
 		    my $a = join "|", @{$acuis};
-		    if(! ($a=~/^\s*$/) ) { if($ai <= $window) { push @line, $a; $ai++; } }
+		    if(! ($a=~/^\s*$/) ) { if($ai <= $window) { push @aline, $a; $ai++; } }
 		}
 		
 	    }   
 	    #  otherwise add the terms
 	    else { 
-		if($bflag == 0) { if($bi <= $window) { push @line, $beforeterm; $bi++; } }
-		if($aflag == 0) { if($ai <= $window) { push @line, $afterterm;  $ai++; } }
+		if($bflag == 0) { if($bi <= $window) { push @bline, $beforeterm; $bi++; } }
+		if($aflag == 0) { if($ai <= $window) { push @aline, $afterterm;  $ai++; } }
 	    }
 	}
     }
     
+    if(defined $weight) {
+	@bline = reverse(@bline);
+	push @bline, "<TARGET>"; 
+	@line = (@bline, @aline);
+    }
+    else {
+	@line = (@bline, @aline);
+    }
+
     #  return the string containing the terms (or CUIs) in the window
     return \@line;
 }
+
+
 
 #  method dumps cache to given file
 #  input : $file <- file name
@@ -525,6 +567,7 @@ sub _setOptions {
     $restrict      = $params->{'restrict'};
     $usingcuis     = $params->{'cuis'};
     $loadcache     = $params->{'loadcache'};
+    $weight        = $params->{'weight'};
 
     if(defined $loadcache) { 
 	if($debug) { print STDERR "Loading Cache\n"; }
@@ -694,10 +737,11 @@ with other parameters, unless you know what you're doing.
 
 =head2 UMLS::SenseRelate parameters
 
-  'window  '     -> This parameter determines the window size of the 
+  'window'       -> This parameter determines the window size of the 
                     context on each side of the target word to be used 
                     for disambiguation
-
+  'weight'       -> This parameter weights the similarity scores based
+                    on how far the term or word is from the target word
   'restrict'     -> This parameter restricts the context to be only 
                     terms/words that map to concepts in the UMLS
 
@@ -723,7 +767,7 @@ Ted Pedersen <tpederse@d.umn.edu>
 
 =head1 COPYRIGHT
 
- Copyright (c) 2010-2011
+ Copyright (c) 2010-2012
  Bridget T. McInnes, University of Minnesota, Twin Cities
  bthomson at umn.edu
 

@@ -155,6 +155,12 @@ available measure are:
     8. Jiang and Conrath (1997) referred to as jcn
     9. The vector measure referred to as vector
 
+=head3 --weight
+
+Weight the scores based on the distance the content term is from the 
+target word. This option can currently only be used with the --window 
+option.
+
 =head3 --stoplist FILE
 
 A file containing a list of words to be excluded. This is used in the 
@@ -179,6 +185,18 @@ for the senserelate program and the other for the relatedness measures.
 =head3 --trace FILE
 
 This stores the trace information in FILE for debugging purposes. 
+
+=head3 --loadcache FILE
+
+Preloads cache. The expected format is:
+
+    score<>cui1<>cui2
+    score<>cui3<>cui4
+    ...
+
+=head3 --getacache FILE
+
+Outputs cache to FILE after run.
 
 =head3 --version
 
@@ -491,7 +509,7 @@ use XML::Twig;
 use File::Spec;
 
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s", "weight")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 0;
@@ -525,6 +543,7 @@ my $precision     = "";
 my $floatformat   = "";
 my $measure       = "";
 my $window        = "";
+my $weight        = "";
 my %sensehash     = ();
 my %candidatehash = ();
 my %instancehash  = ();
@@ -1119,6 +1138,7 @@ sub load_UMLS_SenseRelate {
     if(defined $opt_restrict) { $option_hash{"restrict"}  = $opt_restrict; }
     if(defined $opt_cuis)     { $option_hash{"cuis"}      = $opt_cuis;     }
     if(defined $opt_loadcache){ $option_hash{"loadcache"} = $opt_loadcache;}
+    if(defined $opt_weight)   { $option_hash{"weight"}    = $opt_weight;   }
     
     $option_hash{"measure"} = $measure;
     
@@ -1289,6 +1309,12 @@ sub checkOptions {
 
     if($debug) { print STDERR "In checkOptions\n"; }
 
+    if( (defined $opt_weight) && (! (defined $opt_window)) ) { 
+	print STDERR "The --weight option can only be used with the --window option.\n";
+	    &minimalUsageNotes();
+	    exit;
+    }
+
     if((defined $opt_candidates) && (defined $opt_sval2)) { 
 	print STDERR "The --candidates option is not available for the sval2 format.\n";
 	&minimalUsageNotes();
@@ -1441,7 +1467,12 @@ sub setOptions {
     elsif(defined $opt_plain) { $set .= "  --plain\n";     }
     else                      { $default .= "  --plain\n"; }
 
-    if(defined $opt_key) { $set .= "  --key\n"; }
+    if(defined $opt_weight) { $set .= "  --weight\n"; }
+    if(defined $opt_key)    { $set .= "  --key\n";    }
+    if(defined $opt_cuis)   { $set .= "  --cuis\n";   }
+
+    if(defined $opt_loadcache) { $set .= "  --loadcache $opt_loadcache\n"; }
+    if(defined $opt_setcache)  { $set .= "  --setcache $opt_setcache\n"; }
 
     $log = "log.$timestamp";
     if(defined $opt_log) { 
@@ -1669,6 +1700,9 @@ sub showHelp() {
     print "--window N               The context used to disambiguate the target word.\n";
     print "                         Default: 2\n\n";
 
+    print "--weight                 Weight the context based on distance from the target\n";
+    print "                         word.\n\n";
+
     print "--stoplist FILE          A file containing a list of words to be excluded\n\n";
 
     print "--key                    Stores the  key file information in $log.key for\n";
@@ -1679,6 +1713,10 @@ sub showHelp() {
 
     print "--compound               Input text contains compounds denoted by an under-\n";
     print "                         score in plain or sval tex.\n\n"; 
+
+    print "--loadcache FILE         Preloads cache.\n\n";
+
+    print "--getcache FILE          Dumps cache to file.\n\n";
 
     print "--trace FILE             This stores the trace information in FILE for debugging.\n\n";
 
@@ -1756,8 +1794,8 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-targetword-senserelate.pl,v 1.15 2011/11/02 14:22:24 btmcinnes Exp $';
-    print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
+    print '$Id: umls-targetword-senserelate.pl,v 1.18 2012/04/13 22:09:37 btmcinnes Exp $';
+    print "\nCopyright (c) 2010-2012, Ted Pedersen & Bridget McInnes\n";
 }
 
 ##############################################################################

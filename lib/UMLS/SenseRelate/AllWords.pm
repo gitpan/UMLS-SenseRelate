@@ -1,9 +1,9 @@
 # UMLS::SenseRelate::AllWords
-# (Last Updated $Id: AllWords.pm,v 1.8 2011/05/20 15:17:08 btmcinnes Exp $)
+# (Last Updated $Id: AllWords.pm,v 1.12 2012/04/13 22:09:37 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style WSD
 #
-# Copyright (c) 2010-2011,
+# Copyright (c) 2010-2012,
 #
 # Bridget T. McInnes, University of Minnesota Twin Cities
 # bthomson at umn.edu
@@ -49,6 +49,9 @@ use UMLS::Interface;
 use UMLS::Similarity;
 use UMLS::SenseRelate::ErrorHandler;
 
+use vars qw($VERSION);
+$VERSION = '0.05';
+
 #  module handler variables
 my $umls         = "";
 my $mhandler     = "";
@@ -63,6 +66,7 @@ my $compound      = undef;
 my $trace         = undef;
 my $measure       = undef;
 my $senses        = undef;
+my $weight        = undef;
 
 local(*TRACE);
 
@@ -143,6 +147,7 @@ sub _setOptions {
     #  get all the parameters
     $stoplist      = $params->{'stoplist'};
     $window        = $params->{'window'};
+    $weight        = $params->{'weight'};
     $compound      = $params->{'compound'};
     $trace         = $params->{'trace'};
     $measure       = $params->{'measure'};
@@ -166,6 +171,7 @@ sub _setTargetWordSenseRelate {
     $option_hash{"window"}   = $window;
 
     if(defined $compound) { $option_hash{"compound"} = $compound; }
+    if(defined $weight)   { $option_hash{"weight"} = $weight;     }
     if(defined $stoplist) { $option_hash{"stoplist"} = $stoplist; }
     if(defined $trace)    { $option_hash{"trace"}    = $trace;    }
 
@@ -379,10 +385,11 @@ with other parameters, unless you know what you're doing.
 
 =head2 UMLS::SenseRelate parameters
 
-  'window  '     -> This parameter determines the window size of the 
+  'window'       -> This parameter determines the window size of the 
                     context on each side of the target word to be used 
                     for disambiguation
-
+  'weight'       -> This parameter weights the similarity scores based
+                    on how far the term or word is from the target word
   'stoplist'     -> This parameter disregards stopwords when creating 
                     the window created on the fly (in realtime). 
 
@@ -405,7 +412,7 @@ Ted Pedersen <tpederse@d.umn.edu>
 
 =head1 COPYRIGHT
 
- Copyright (c) 2010-2011
+ Copyright (c) 2010-2012
  Bridget T. McInnes, University of Minnesota Twin Cities
  bthomson at umn.edu
 

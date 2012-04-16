@@ -131,6 +131,12 @@ available measure are:
     8. Jiang and Conrath (1997) referred to as jcn
     9. The vector measure referred to as vector
 
+=head3 --weight
+
+Weight the scores based on the distance the content term is from the 
+target word. This option can currently only be used with the --window 
+option.
+
 =head3 --stoplist FILE
 
 A file containing a list of words to be excluded. This is used in 
@@ -406,7 +412,7 @@ set, definition words are stemmed using the Lingua::Stem::En module.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010-2011
+Copyright (c) 2010-2012
 
  Bridget T. McInnes, University of Minnesota Twin Cities
  bthomson at umn.edu
@@ -451,7 +457,7 @@ use UMLS::Interface;
 use UMLS::SenseRelate::AllWords;
 use Getopt::Long;
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "candidates", "awxml", "compound", "trace=s", "undirected")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "candidates", "awxml", "compound", "trace=s", "undirected", "weight")) or die ("Please check the above mentioned option(s).\n");
 
 
 #  set debug
@@ -487,6 +493,7 @@ my $precision    = "";
 my $floatformat  = "";
 my $measure      = "";
 my $window       = "";
+my $weight       = "";
 my %instancehash = ();
 
 #  check and set the options
@@ -701,6 +708,7 @@ sub load_UMLS_SenseRelate {
     if(defined $opt_stoplist)  { $option_hash{"stoplist"}   = $opt_stoplist;  }
     if(defined $opt_trace)     { $option_hash{"trace"}      = $opt_trace;     }
     if(defined $opt_candidates){ $option_hash{"candidates"} = $opt_candidates;}
+    if(defined $opt_weight)    { $option_hash{"weight"}     = $opt_weight;    }
 
     $option_hash{"measure"} = $measure;
 
@@ -863,6 +871,11 @@ sub checkOptions {
 
     if($debug) { print STDERR "In checkOptions\n"; }
 
+    if( (defined $opt_weight) && (! (defined $opt_window)) ) { 
+	print STDERR "The --weight option can only be used with the --window option.\n";
+	    &minimalUsageNotes();
+	    exit;
+    }
     if(defined $opt_measure) {
 	if($opt_measure=~/\b(path|wup|lch|cdist|nam|vector|res|lin|random|jcn|lesk)\b/) {
 	    #  good to go
@@ -985,7 +998,8 @@ sub setOptions {
     if(defined $opt_awxml)  { $set .= "  --awxml\n";     }
     else                    { $default .= "  --awxml\n"; }
 
-    if(defined $opt_key) { $set .= "  --key\n"; }
+    if(defined $opt_weight) { $set .= "  --weight\n"; }
+    if(defined $opt_key)    { $set .= "  --key\n"; }
 
 
     $log = "log.$timestamp";
@@ -1184,6 +1198,9 @@ sub showHelp() {
     print "--window N               The context used to disambiguate the target word.\n";
     print "                         Default: 2\n\n";
 
+    print "--weight                 Weight the context based on distance from the target\n";
+    print "                         word.\n\n";
+
     print "--stoplist FILE          A file containing a list of words to be excluded\n\n";
 
     print "--key                    Stores the  key file information in $log.key for\n";
@@ -1269,7 +1286,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-allwords-senserelate.pl,v 1.10 2011/05/20 15:17:08 btmcinnes Exp $';
+    print '$Id: umls-allwords-senserelate.pl,v 1.12 2012/04/13 22:09:37 btmcinnes Exp $';
     print "\nCopyright (c) 2011, Ted Pedersen & Bridget McInnes\n";
 }
 

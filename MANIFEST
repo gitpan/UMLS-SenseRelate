@@ -41,5 +41,4 @@ utils/synopsis.pl
 utils/umls-allwords-senserelate.pl
 utils/umls-senserelate-evaluation.pl
 utils/umls-targetword-senserelate.pl
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
+META.yml                                 Module meta-data (added by MakeMaker)

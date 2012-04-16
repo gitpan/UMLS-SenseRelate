@@ -2,7 +2,7 @@
 #
 # Perl implementation of the senerelate algorithm 
 #
-# Copyright (c) 2010-2011
+# Copyright (c) 2010-2012
 #
 # Bridget T McInnes, University of Minnesota, Twin Cities
 # bthomson at cs.umn.edu
@@ -35,7 +35,7 @@
 
 package UMLS::SenseRelate;
 
-$VERSION = '0.17';
+$VERSION = '0.19';
 
 sub new
 {
@@ -145,7 +145,7 @@ UMLS::Similarity(2)
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2010-2011 by Bridget McInnes, Serguei Pakhomov, 
+Copyright 2010-2012 by Bridget McInnes, Serguei Pakhomov, 
 Ying Liu and Ted Pedersen
 
 This library is free software; you can redistribute it and/or modify

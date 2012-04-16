@@ -105,7 +105,7 @@ Displays the help information
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010-2011,
+Copyright (c) 2010-2012,
 
  Bridget T. McInnes, University of Minnesota Twin Cities
  bthomson at umn.edu
@@ -346,8 +346,8 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-senserelate-evaluation.pl,v 1.4 2011/04/18 16:18:55 btmcinnes Exp $';
-    print "\nCopyright (c) 2010-2011, Ted Pedersen & Bridget McInnes\n";
+    print '$Id: umls-senserelate-evaluation.pl,v 1.5 2012/04/13 22:09:37 btmcinnes Exp $';
+    print "\nCopyright (c) 2010-2012, Ted Pedersen & Bridget McInnes\n";
 }
 
 ##############################################################################

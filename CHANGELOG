@@ -1,13 +1,18 @@
 NAME
     UMLS::SenseRelate CHANGES
 
+  Changes from version 0.17 to 0.19
+    1. added --weight option to weight the cuis/terms/words based on the
+    distance they are from the target word; this is in allwords as well as
+    target word
+
   Changes from version 0.15 to 0.17
     1. added a --cuis option to use the surrounding CUIs obtained by MetaMap
     when using the --mmxml formatted input file
 
     2. speed things up - working more on this
 
-    3. added --loadcache and --dumpcache options
+    3. added a --loadcache and --getcache option to target word programs
 
   Changes from version 0.13 to 0.15
     1. added a --restrict option which uses only the terms that have a
