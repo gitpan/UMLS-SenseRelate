@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.32 2012/04/13 22:09:37 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.34 2012/05/26 11:40:35 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -49,7 +49,7 @@ use UMLS::Similarity;
 use UMLS::SenseRelate::ErrorHandler;
 
 use vars qw($VERSION);
-$VERSION = '0.05';
+$VERSION = '0.07';
 
 #  module handler variables
 my $umls          = "";
@@ -93,7 +93,7 @@ sub new {
 
     my $function = "new";
 
-    # bless the object.
+    # bless the object
     bless($self, $className);
 
     # initialize error handler
@@ -194,35 +194,18 @@ sub assignSense {
 
 	if(defined $trace) { print TRACE " Processing sense ($sense)\n"; }
 	
-	#  find the target word for weighting 
-	my $tloc = 0; my $tcount = 0;
-	for(my $i = 0; $i <= $#terms; $i++) { 
-	    if($terms[$i]=~/^\s*$/)    { next;            }
-	    $tcount++;
-	    if($terms[$i]=~/<TARGET>/) { $tloc = $tcount; } 
-	}
-	
 	my $tflag = 0; my $counter = 0;
 	for(my $i = 0; $i <= $#terms; $i++) { 
-
+	    
+	    
 	    #  get the term
-	    my $term = $terms[$i];
-
+	    my ($term, $distance) = split/\:/, $terms[$i];
+	    
 	    #  ignore if nothing -- just a check
 	    if($term=~/^\s*$/) { next; }
 
 	    #  increment the counter dictacting what word we are on
 	    $counter++; 
-
-	    #  added a <TARGET> flag for the weighting
-	    if($term=~/<TARGET>/) { $tflag = 1; next; }
-
-	    #  get the weight of the term if defined
-	    my $wdelta = 0;
-	    if(defined $weight) { 
-		if($tflag == 0) { $wdelta = 1/($tloc - $counter);  }
-		else            { $wdelta = 1/($counter - $tloc);  }
-	    }
 
 	    #  get the term's CUI if it not one
 	    my $cuis = undef;
@@ -232,7 +215,7 @@ sub assignSense {
 		my @c = split/\|/, $term;
 		foreach my $cui (@c) { push @{$cuis}, $cui; }
 	    }
-	    #  if the term is just a cuis 
+	    #  if the term is just a cuis
 	    elsif($term=~/C[0-9][0-9][0-9][0-9][0-9][0-9][0-9]/) {
 		while($term=~/(C[0-9][0-9][0-9][0-9][0-9][0-9][0-9])/g) { 
 		    my $c = $1;
@@ -280,13 +263,21 @@ sub assignSense {
 		else { 
 		    my $relatedness = $mhandler->getRelatedness($sense, $cui); 
 		    $score = sprintf $floatformat, $relatedness;
-		    if(defined $weight) { 
-			$score = $score * $wdelta;
-		    }
 		    $cache{$sense}{$cui} = $score;
 		}
-	
-		if(defined $trace) { print TRACE "    Relatedness($cui, $sense) = $score\n"; }
+
+		#  if the weight is defined weight the score based on
+		#  its distance from the target word
+		if(defined $weight) { 
+		    my $temp = $score;
+		    $score = $score * (1/$distance);
+		    if(defined $trace) { 
+			print TRACE "    Relatedness($cui, $sense) = $score ($temp * (1/$distance))\n"; 
+		    }
+		}
+		else { 
+		    if(defined $trace) { print TRACE "    Relatedness($cui, $sense) = $score\n"; }
+		}
 
 		#  check if it is the highest and if so save it
 		if($score > $value) { $value = $score; }
@@ -342,11 +333,16 @@ sub _getId {
     my $self     = shift;
     my $instance = shift;
 
-    #  get the id
-    $instance=~/<head item=\"(.*?)\" instance=\"(.*?)\">(.*?)<\/head>/;
-    my $tw     = $1;
-    my $id     = $2;
-
+    my $tw = ""; my $id = "";
+    if($instance=~/<head item=\"(.*?)\" instance=\"(.*?)\" sense/) { 
+	$tw     = $1;
+	$id     = $2;
+    }
+    elsif($instance=~/<head item=\"(.*?)\" instance=\"(.*?)\">(.*?)<\/head>/) { 
+	$tw     = $1;
+	$id     = $2;
+    }	
+    
     return $id;
 }
 
@@ -452,11 +448,14 @@ sub _getWindow {
 	my @afterarray = split/\s+/, $after;
 	
 	#  add those terms in the window to the return reference to array line
-	my $bi = 1; my $ai = 1;
+	my $bi = 1; my $ai = 1; my $bindex = 0; my $aindex = 0;
 	while($bi <= $window || $ai <= $window) { 
 	    
 	    my $beforeterm = "";
 	    my $afterterm  = "";
+
+	    #  increment the distance from the target word
+	    $bindex++; $aindex++;
 
 	    if($#beforearray > -1) { $beforeterm = pop @beforearray; }
 	    if($#afterarray > -1)  { $afterterm = shift @afterarray; }
@@ -491,31 +490,23 @@ sub _getWindow {
 
 		if(defined $bcuis) { 
 		    my $b = join "|", @{$bcuis};
-		    if(! ($b=~/^\s*$/) ) { if($bi <= $window) { push @bline, $b; $bi++; } }
+		    if(! ($b=~/^\s*$/) ) { if($bi <= $window) { push @bline, "$b:$bindex"; $bi++; } }
 		}
 		if(defined $acuis) { 
 		    my $a = join "|", @{$acuis};
-		    if(! ($a=~/^\s*$/) ) { if($ai <= $window) { push @aline, $a; $ai++; } }
+		    if(! ($a=~/^\s*$/) ) { if($ai <= $window) { push @aline, "$a:$aindex"; $ai++; } }
 		}
 		
 	    }   
 	    #  otherwise add the terms
 	    else { 
-		if($bflag == 0) { if($bi <= $window) { push @bline, $beforeterm; $bi++; } }
-		if($aflag == 0) { if($ai <= $window) { push @aline, $afterterm;  $ai++; } }
+		if($bflag == 0) { if($bi <= $window) { push @bline, "$beforeterm:$bindex"; $bi++; } }
+		if($aflag == 0) { if($ai <= $window) { push @aline, "$afterterm:$aindex";  $ai++; } }
 	    }
 	}
-    }
-    
-    if(defined $weight) {
-	@bline = reverse(@bline);
-	push @bline, "<TARGET>"; 
+        
 	@line = (@bline, @aline);
     }
-    else {
-	@line = (@bline, @aline);
-    }
-
     #  return the string containing the terms (or CUIs) in the window
     return \@line;
 }

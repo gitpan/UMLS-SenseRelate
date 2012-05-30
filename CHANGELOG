@@ -1,6 +1,10 @@
 NAME
     UMLS::SenseRelate CHANGES
 
+  Changes from version 0.19 to 0.21
+    1. modified the --weight option so that stopwords are included in the
+    distance
+
   Changes from version 0.17 to 0.19
     1. added --weight option to weight the cuis/terms/words based on the
     distance they are from the target word; this is in allwords as well as
