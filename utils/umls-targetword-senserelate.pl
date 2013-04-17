@@ -332,6 +332,10 @@ where probability is the probability of the concept occurring.
 
 See create-icpropagation.pl for more information.
 
+=head3 --intrinsic [seco|sanchez]
+
+Uses intrinic information content of the CUIs defined by Sanchez and
+Betet 2011 or Seco, et al 2004. 
 
 =head2 UMLS-Similarity Vector Measure Options:
 
@@ -509,7 +513,7 @@ use XML::Twig;
 use File::Spec;
 
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s", "weight")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "intrinsic=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s", "weight")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 0;
@@ -1193,7 +1197,10 @@ sub load_UMLS_Similarity {
 	$ic_hash{"icpropagation"} = $opt_icpropagation;
     }
     if(defined $opt_icfrequency) { 
-	$is_hash{"icfrequency"} = $opt_icfrequency;
+	$ic_hash{"icfrequency"} = $opt_icfrequency;
+    }
+    if(defined $opt_intrinsic) { 
+	$ic_hash{"intrinsic"} = $opt_intrinsic; 
     }
 
 
@@ -1402,10 +1409,24 @@ sub checkOptions {
 	    exit;
 	}
     }
-    
+
+    if(defined $opt_icpropagation and defined $opt_intrinsic) {
+        print STDERR "You can not specify both the --icpropagation and\n";
+        print STDERR "--intrinsic options at the same time.\n\n";
+        &minimalUsageNotes();
+        exit;
+    }
+
+    if(defined $opt_icfrequency and defined $opt_intrinsic) {
+        print STDERR "You can not specify both the --icfrequency and\n";
+        print STDERR "--intrinsic options at the same time.\n\n";
+        &minimalUsageNotes();
+	exit;
+    }
+
     #  the icpropagation and icfrequency options can only be used 
     #  with specific measures
-    if(defined $opt_icpropagation || defined $opt_icfrequency) { 
+    if(defined $opt_icpropagation || defined $opt_icfrequency || defined $opt_intrinsic) { 
 	if( !($opt_measure=~/(res|lin|jcn)/) ) {
 	    print STDERR "The --icpropagation or --icfrequency options\n";
             print STDERR "may only be specified when using the res, lin\n";
@@ -1597,6 +1618,9 @@ sub setOptions {
     if(defined $opt_icfrequency) {
 	$set .= "  --icfrequency $opt_icfrequency\n";
     }
+    if(defined $opt_intrinsic) {
+	$set .= "  --intrinsic $opt_intrinsic\n";
+    }
     if(defined $opt_smooth) {
 	$set .= "  --smooth\n";
     }
@@ -1756,6 +1780,9 @@ sub showHelp() {
     print "--icpropagation FILE     File containing the information content\n";
     print "                         of the CUIs.\n\n";
 
+    print "--intrinsic [seco|sanchez] Use the intrinsic IC defined either by\n";
+    print "                           Seco et al 2004 or Sanchez et al 2011\n\n";
+
     print "\n\nVector Options:\n\n";
 
     print "--vectormatrix FILE      The matrix file containing the vector\n";
@@ -1794,7 +1821,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-targetword-senserelate.pl,v 1.18 2012/04/13 22:09:37 btmcinnes Exp $';
+    print '$Id: umls-targetword-senserelate.pl,v 1.19 2013/04/17 13:44:11 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2012, Ted Pedersen & Bridget McInnes\n";
 }
 
