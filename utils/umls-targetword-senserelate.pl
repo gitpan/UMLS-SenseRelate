@@ -429,6 +429,17 @@ cleaned.
 This is a flag for the vector and lesk method. If the --stem flag is 
 set, definition words are stemmed using the Lingua::Stem::En module. 
 
+=head3 --compoundfile FILE
+
+This is a compound word file for the vector and lesk measures. 
+It containsthe compound words which we want to consider them as 
+one wordwhen we compare the relatedness. Each compound word is a 
+line in the file and compound words are seperated by space. When 
+using this option with vector, make sure the vectormatrix and 
+vectorindex file are based on the corpus proprocessed by replacing 
+the compound words in the Text-NSP package. An example is under 
+/sample/compoundword.txt 
+
 =head1 SYSTEM REQUIREMENTS
 
 =over
@@ -512,9 +523,7 @@ use Getopt::Long;
 use XML::Twig;
 use File::Spec;
 
-
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "intrinsic=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s", "weight")) or die ("Please check the above mentioned option(s).\n");
-
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "intrinsic=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "compoundfile=s", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s", "weight")) or die ("Please check the above mentioned option(s).\n");
 
 my $debug = 0;
 
@@ -1231,26 +1240,26 @@ sub load_UMLS_Similarity {
     }
     
     #  load the module implementing the lesk measure
-
+    
     if($measure eq "lesk") {
 	use UMLS::Similarity::lesk;
 	my %leskoptions = ();
 	
-	if(defined $opt_config)      { $leskoptions{"config"}    = $opt_config;       }
-	if(defined $opt_leskstoplist){ $leskoptions{"stoplist"}  = $opt_leskstoplist; }
-	if(defined $opt_stem)        { $leskoptions{"stem"}      = $opt_stem;         }
-	if(defined $opt_debugfile)   { $leskoptions{"debugfile"} = $opt_debugfile;    }
-	if(defined $opt_defraw)      { $leskoptions{"defraw"}    = $opt_defraw;       }
-	if(defined $opt_dictfile)    { $leskoptions{"dictfile"}  = $opt_dictfile;     }
+	if(defined $opt_config)      { $leskoptions{"config"}       = $opt_config;       }
+	if(defined $opt_leskstoplist){ $leskoptions{"stoplist"}     = $opt_leskstoplist; }
+	if(defined $opt_stem)        { $leskoptions{"stem"}         = $opt_stem;         }
+	if(defined $opt_debugfile)   { $leskoptions{"debugfile"}    = $opt_debugfile;    }
+	if(defined $opt_defraw)      { $leskoptions{"defraw"}       = $opt_defraw;       }
+	if(defined $opt_dictfile)    { $leskoptions{"dictfile"}     = $opt_dictfile;     }
+	if(defined $opt_compoundfile){ $leskoptions{"compoundfile"} = $opt_compoundfile; }
 	
         $meas = UMLS::Similarity::lesk->new($umls,\%leskoptions);  
     }
-
-
+    
+    
     if($measure eq "vector") {
-	
 	require "UMLS/Similarity/vector.pm";
-
+	
 	my %vectoroptions = ();
 	
 	if(defined $opt_dictfile)      { $vectoroptions{"dictfile"}    = $opt_dictfile;       }
@@ -1261,12 +1270,13 @@ sub load_UMLS_Similarity {
 	if(defined $opt_defraw)        { $vectoroptions{"defraw"}       = $opt_defraw;        }
 	if(defined $opt_vectorstoplist){ $vectoroptions{"stoplist"}     = $opt_vectorstoplist;}
 	if(defined $opt_stem)          { $vectoroptions{"stem"}         = $opt_stem;          }
-       
+	if(defined $opt_compoundfile)  { $vectoroptions{"compoundfile"} = $opt_compoundfile;   }
+	
 	$meas = UMLS::Similarity::vector->new($umls,\%vectoroptions);
     }
-
+    
     die "Unable to create measure object.\n" if(!$meas);
-
+    
     return $meas;
 }
 
@@ -1372,7 +1382,7 @@ sub checkOptions {
 	    exit;
 	}
     }    
-   
+    
     if(defined $opt_vectormatrix and defined $opt_vectorindex) { 
 	if(! ($opt_measure=~/vector/) ) {
 	    print STDERR "The --vectormatrix and --vectorindex options are only\n";
@@ -1385,6 +1395,15 @@ sub checkOptions {
     if(defined $opt_vectormatrix) { 
 	if(! ($opt_measure=~/vector/) ) {
 	    print STDERR "The --vectormatrix option is only available\n";
+	    print STDERR "when using the vector measure. \n\n";
+	    &minimalUsageNotes();
+	    exit;
+	}
+    }    
+
+    if(defined $opt_compoundfile) { 
+	if(! ($opt_measure=~/vector/) ) {
+	    print STDERR "The --compoundfile option is only available\n";
 	    print STDERR "when using the vector measure. \n\n";
 	    &minimalUsageNotes();
 	    exit;
@@ -1630,6 +1649,10 @@ sub setOptions {
     if(defined $opt_vectorindex) { 
 	$set .= "  --vectorindex $opt_vectorindex\n";
     }
+    if(defined $opt_compoundfile) { 
+	$set .= "  --compoundfile $opt_compoundfile\n";
+    }
+
     if(defined $opt_debugfile) { 
 	$set .= "  --debugfile $opt_debugfile\n";
     }    
@@ -1790,10 +1813,14 @@ sub showHelp() {
 
     print "--vectorindex FILE       The index file containing the vector\n";
     print "                         information for the vector measure.\n\n";
-    
-
+        
     print "\n\nVector and Lesk Measure Options:\n\n";
     
+    print "--compoundfile FILE      This is a compound word file for the vector and lesk\n";
+    print "                         measures. It contains the compound word lists.\n";
+    print "                         For the compounds words in the definitions \n";
+    print "                         are treated as a single unit.\n\n";
+
     print "--dictfile FILE          This is a dictionary file for the vector and lesk\n";
     print "                         measure. It contains the 'definitions' of a concept\n";
     print "                         which would be used rather than the definitions from\n";
@@ -1821,7 +1848,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-targetword-senserelate.pl,v 1.19 2013/04/17 13:44:11 btmcinnes Exp $';
+    print '$Id: umls-targetword-senserelate.pl,v 1.20 2013/05/23 17:48:13 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2012, Ted Pedersen & Bridget McInnes\n";
 }
 
@@ -1831,4 +1858,4 @@ sub showVersion {
 sub askHelp {
     print STDERR "Type umls-targetword-senserelate.pl --help for help.\n";
 }
-    
+

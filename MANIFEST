@@ -40,5 +40,6 @@ t/targetword.t
 utils/synopsis.pl
 utils/umls-allwords-senserelate.pl
 utils/umls-senserelate-evaluation.pl
+utils/umls-senserelate-ttest.pl
 utils/umls-targetword-senserelate.pl
 META.yml                                 Module meta-data (added by MakeMaker)

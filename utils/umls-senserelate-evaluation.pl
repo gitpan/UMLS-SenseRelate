@@ -28,6 +28,10 @@ words.
 
 =head2 General Options:
 
+=head3 --info FILE
+
+Prints out accuracy information to FILE
+
 =head3 --senses DIR|File
 
 Sometimes of the senses in the key file do not map directly to 
@@ -151,7 +155,7 @@ use UMLS::Interface;
 use UMLS::SenseRelate::TargetWord;
 use Getopt::Long;
 
-eval(GetOptions( "version", "verbose", "help", "senses=s", "debug")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "verbose", "info=s", "help", "senses=s", "debug")) or die ("Please check the above mentioned option(s).\n");
 
 
 my $debug = 0;
@@ -180,6 +184,11 @@ if(scalar(@ARGV) < 1) {
     print STDERR "The umls-targetword-senserelate log directory must be given on the command line.\n";
     &minimalUsageNotes();
     exit;
+}
+
+local(*INFO);
+if(defined $opt_info) { 
+    open(INFO, ">$opt_info") || die "Could not open --info FILE ($opt_info)\n";
 }
 
 my $log = shift;
@@ -226,6 +235,10 @@ sub evaluateUsingScorer {
 	
 	if(defined $opt_verbose) { 
 	    print STDERR "$tw\t$precision\n";
+	}
+
+	if(defined $opt_info) { 
+	    print INFO "$tw\t$precision\n";
 	}
 
 	$total_precision += $precision; $total_tw++;
@@ -336,6 +349,8 @@ sub showHelp() {
     
     print "--verbose                Prints accuracy information to STDOUT\n\n";
 
+    print "--info FILE              Prints accuracy information to FILE\n\n";
+
     print "--version                Prints the version number\n\n";
     
     print "--help                   Prints this help message.\n\n";
@@ -346,7 +361,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-senserelate-evaluation.pl,v 1.5 2012/04/13 22:09:37 btmcinnes Exp $';
+    print '$Id: umls-senserelate-evaluation.pl,v 1.6 2013/05/23 17:48:13 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2012, Ted Pedersen & Bridget McInnes\n";
 }
 

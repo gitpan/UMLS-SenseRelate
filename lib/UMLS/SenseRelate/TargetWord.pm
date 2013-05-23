@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.34 2012/05/26 11:40:35 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.35 2013/05/23 17:48:13 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -261,7 +261,7 @@ sub assignSense {
 		
 		#  otherwise go get it and then put it there
 		else { 
-		    my $relatedness = $mhandler->getRelatedness($sense, $cui); 
+		    my $relatedness = $mhandler->getRelatedness("$sense", "$cui"); 
 		    $score = sprintf $floatformat, $relatedness;
 		    $cache{$sense}{$cui} = $score;
 		}
