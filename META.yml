@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               UMLS-SenseRelate
-version:            0.25
+version:            0.27
 abstract:           ~
 author:
     - Bridget McInnes <bthomson@umn.edu>, Ted Pedersen <tpederse@d.umn.edu>, Serguei Pakhomov <pakh0002@umn.edu>, Ying Liu <liux0395@umn.edu>

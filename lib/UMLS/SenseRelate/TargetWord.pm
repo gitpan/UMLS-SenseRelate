@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.35 2013/05/23 17:48:13 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.36 2013/06/20 17:38:44 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -69,6 +69,7 @@ my $restrict      = undef;
 my $usingcuis     = undef; 
 my $loadcache     = undef;
 my $weight        = undef;
+my $aggregator    = undef; 
 
 local(*TRACE);
 
@@ -194,15 +195,14 @@ sub assignSense {
 
 	if(defined $trace) { print TRACE " Processing sense ($sense)\n"; }
 	
-	my $tflag = 0; my $counter = 0;
+	my $tflag = 0; my $counter = 0; my @scores = (); 
 	for(my $i = 0; $i <= $#terms; $i++) { 
-	    
-	    
+	    	    
 	    #  get the term
 	    my ($term, $distance) = split/\:/, $terms[$i];
 	    
 	    #  ignore if nothing -- just a check
-	    if($term=~/^\s*$/) { next; }
+	    if($term=~/^\s*$/) { push @scores, -1; next; }
 
 	    #  increment the counter dictacting what word we are on
 	    $counter++; 
@@ -241,7 +241,7 @@ sub assignSense {
 	    }
 
 	    if(defined $trace) { 
-		if($#{$cuis} >= 0) { print TRACE "  Processing term: '$term' (@{$cuis})\n"; }
+		if($#{$cuis} > 0)  { print TRACE "  Processing term: '$term' (@{$cuis})\n"; }
 		else               { print TRACE "  Processing term: '$term' (No Mapping)\n"; }
 	    }
 
@@ -283,23 +283,80 @@ sub assignSense {
 		if($score > $value) { $value = $score; }
 	    }
 	    
+	    $scores[$i] = $value; 
+	}
+
+	my $sum = 0; my $n = 0; 
+	if($aggregator eq "orness" || $aggregator eq "andness" || $aggregator eq "disp") { 
+	    foreach my $score (@scores) { 
+		if($score > 0) { 
+		    $sum += $score; 
+		    $n++; 
+		}	    
+	    }
+	}
+	
+	for(my $i = 0; $i <= $#scores; $i++) { 
+	    
+	    my $value = $scores[$i]; 
+	    
 	    #  so if their is a similarity between the term/CUI and sense 
 	    #  save the highest term-sense score 
-	    if($value >= 0) { 
-		$sensescore += $value; $termcounter++;
+	    if($value > 0) { 
+		$termcounter++;
+
+		if($aggregator eq "orness" || $aggregator eq "andness") { 
+		    $value  = $value / $sum; 
+		    print STDERR "$value $n $termcounter\n";
+		    $sensescore += ( ($n-$termcounter) * $value ); 
+		}
+		elsif($aggregator eq "max") { 
+		    if($sensescore < $value) { $sensescore = $value; }
+		}
+		elsif($aggregator eq "disp") { 
+		    $value = $value / $sum; 
+		    $sensescore += ($value * log($value)); 
+		}
+		elsif($aggregator eq "closeness") { 
+		    $sensescore += (1 - $value); 
+		}
+		else { 
+		    $sensescore += $value; 
+		}
+		
 		if(defined $trace) { 
 		    print TRACE "    Increment sense's score by $value to total $sensescore\n";
 		}
 	    }
 	    
 	}
-
-	#  average the sense score
-	if($termcounter > 0) { $sensescore = $sensescore / $termcounter; }
 	
+	#  average the sense score
+	if($aggregator eq "avg") { 
+	    if($termcounter > 0) { $sensescore = $sensescore / $termcounter; }
+	}
+	
+	if($aggregator eq "orness" || $aggregator eq "andness") { 
+	    if($n > 1) { $sensescore = $sensescore / ($n-1); }
+	}
+	
+	if($aggregator eq "andness") { 
+	    $sensescore = 1 - $sensescore; 
+	}
+
+	if($aggregator eq "disp") { 
+	    $sensescore = $sensescore * -1; 
+	}
+	
+	if($aggregator eq "closeness") { 
+	    if($sensescore > 0) { 
+		$sensescore = 1 / $sensescore; 
+	    }
+	}
+
 	#  store the sense score for that possible sense
 	$sensescores{$sense} = $sensescore;
-	    
+	
 	if(defined $trace) { 
 	    print TRACE " Overall similarity for $sense = $sensescore\n"; 
 	}
@@ -559,6 +616,7 @@ sub _setOptions {
     $usingcuis     = $params->{'cuis'};
     $loadcache     = $params->{'loadcache'};
     $weight        = $params->{'weight'};
+    $aggregator    = $params->{'aggregator'}; 
 
     if(defined $loadcache) { 
 	if($debug) { print STDERR "Loading Cache\n"; }
@@ -594,6 +652,10 @@ sub _setOptions {
     }
     else { 
 	$floatformat = join '', '%', '.', 4, 'f';
+    }
+
+    if(! defined $aggregator) { 
+	$aggregator = "avg";
     }
 }
 

@@ -136,7 +136,15 @@ The window in which to obtain the context surrounding the ambiguous term.
 
 Default: 2
 
-=head2 --restrict 
+=head3 --aggregator AGGREGATOR
+
+The aggregator method to be used to combine the similarity scores. The 
+available aggregators are: 
+    1. max - the maximum similarity score
+    2. avg - the average similarity score (default)
+    3. orness - \frac{1}{(n-1)} Sum_{i=1}^{n} (n-i)w_{i} 
+
+=head3 --restrict 
 
 This restricts the window to be contain the context whose terms maps 
 to UMLS, not just any old term
@@ -523,7 +531,7 @@ use Getopt::Long;
 use XML::Twig;
 use File::Spec;
 
-eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "intrinsic=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "compoundfile=s", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s", "weight")) or die ("Please check the above mentioned option(s).\n");
+eval(GetOptions( "version", "help", "username=s", "password=s", "hostname=s", "database=s", "socket=s", "measure=s", "config=s", "forcerun", "debug", "icpropagation=s", "intrinsic=s", "realtime", "stoplist=s", "vectorstoplist=s", "leskstoplist=s", "vectormatrix=s", "vectorindex=s", "defraw", "dictfile=s", "t", "stem", "window=s", "key", "log=s", "senses=s", "plain", "sval2", "mmxml", "candidates", "cuis", "compound", "compoundfile=s", "trace=s", "undirected", "st", "precision", "restrict", "loadcache=s", "getcache=s", "weight", "aggregator=s")) or die ("Please check the above mentioned option(s).\n");
 
 my $debug = 0;
 
@@ -555,6 +563,7 @@ my $stopregex     = undef;
 my $precision     = "";
 my $floatformat   = "";
 my $measure       = "";
+my $aggregator    = "";
 my $window        = "";
 my $weight        = "";
 my %sensehash     = ();
@@ -1144,24 +1153,23 @@ sub load_UMLS_SenseRelate {
     
     $option_hash{"window"}   = $window;
 
-    if(defined $opt_compound) { $option_hash{"compound"}  = $opt_compound; }
-    if(defined $opt_stoplist) { $option_hash{"stoplist"}  = $opt_stoplist; }
-    if(defined $opt_trace)    { $option_hash{"trace"}     = $opt_trace;    }
-    if(defined $opt_precision){ $option_hash{"precision"} = $opt_precision;}
-    if(defined $opt_restrict) { $option_hash{"restrict"}  = $opt_restrict; }
-    if(defined $opt_cuis)     { $option_hash{"cuis"}      = $opt_cuis;     }
-    if(defined $opt_loadcache){ $option_hash{"loadcache"} = $opt_loadcache;}
-    if(defined $opt_weight)   { $option_hash{"weight"}    = $opt_weight;   }
-    
+    if(defined $opt_compound)   { $option_hash{"compound"}   = $opt_compound;  }
+    if(defined $opt_stoplist)   { $option_hash{"stoplist"}   = $opt_stoplist;  }
+    if(defined $opt_trace)      { $option_hash{"trace"}      = $opt_trace;     }
+    if(defined $opt_precision)  { $option_hash{"precision"}  = $opt_precision; }
+    if(defined $opt_restrict)   { $option_hash{"restrict"}   = $opt_restrict;  }
+    if(defined $opt_cuis)       { $option_hash{"cuis"}       = $opt_cuis;      }
+    if(defined $opt_loadcache)  { $option_hash{"loadcache"}  = $opt_loadcache; }
+    if(defined $opt_weight)     { $option_hash{"weight"}     = $opt_weight;    }
+    if(defined $opt_aggregator) { $option_hash{"aggregator"} = $opt_aggregator;}    
+
     $option_hash{"measure"} = $measure;
     
     my $handler = UMLS::SenseRelate::TargetWord->new($umls, $meas, \%option_hash); 
     die "Unable to create UMLS::SenserRelateTargetWord object.\n" if(!$handler);
     
     return $handler;
-    
 }
-		 
 
 #  load the appropriate measure in the UMLS-Similarity package
 sub load_UMLS_Similarity {
@@ -1576,6 +1584,15 @@ sub setOptions {
 	$set .= "  --trace $opt_trace\n"; 
     }
 
+    if(defined $opt_aggregator) {
+	$aggregator = $opt_aggregator;
+	$set    .= "  --aggregator $aggregator\n";
+    }
+    else {
+	$aggregator  = "avg";
+	$set     .= "  --aggregator $aggregator\n";
+    }
+
     #  UMLS::Interface options
     if(defined $opt_config) { 
 	$config = $opt_config;
@@ -1740,7 +1757,10 @@ sub showHelp() {
     
     print "--measure MEASURE        The measure to use to calculate the\n";
     print "                         semantic similarity. (DEFAULT: path)\n\n";
-    
+
+    print "--aggregator AGGREGATOR  The aggregator method to be used to combine\n";
+    print "                         the similarity scores (DEFAULT: avg)\n\n";
+ 
     print "--restrict               This restricts the window to be contain the \n";
     print "                         context whose terms maps to a UMLS concept\n\n";
 
@@ -1848,7 +1868,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-targetword-senserelate.pl,v 1.20 2013/05/23 17:48:13 btmcinnes Exp $';
+    print '$Id: umls-targetword-senserelate.pl,v 1.22 2013/07/19 19:46:48 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2012, Ted Pedersen & Bridget McInnes\n";
 }
 

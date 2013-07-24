@@ -57,6 +57,7 @@ UMLS::SenseRelate
         lch    - Leacock & Chodorow (1998)
         wup    - Wu & Palmer (1994)
         nam    - Nguyen and Al-Mubaid  (2006) 
+        zhong  - Zhong, et al. 2002
         cdist  - Rada, et. al. 1989
         jcn    - Jiang & Conrath (1997) 
         res    - Resnik (1995)
@@ -198,7 +199,7 @@ UMLS::SenseRelate
     README.
 
   SOFTWARE COPYRIGHT AND LICENSE
-    Copyright (C) 2010-2011 Bridget T McInnes, Ying Liu, Serguei Pakhomov
+    Copyright (C) 2010-2013 Bridget T McInnes, Ying Liu, Serguei Pakhomov
     and Ted Pedersen
 
     This suite of programs is free software; you can redistribute it and/or
@@ -247,7 +248,7 @@ UMLS::SenseRelate
      pakh002 at umn.edu
 
   DOCUMENTATION COPYRIGHT AND LICENSE
-    Copyright (C) 2010-2011 Bridget T. McInnes, Ying Liu, Serguei Pakhomov
+    Copyright (C) 2010-2012 Bridget T. McInnes, Ying Liu, Serguei Pakhomov
     and Ted Pedersen.
 
     Permission is granted to copy, distribute and/or modify this document

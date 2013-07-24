@@ -1,6 +1,9 @@
 NAME
     UMLS::SenseRelate CHANGES
 
+  Changes from version 0.25 to 0.27
+    1. added two additional aggregators (orness and max)
+
   Changes from version 0.23 to 0.25
     1. added the --info option to the umls-senserelate-evaluation.pl program
     to print out the accuracy of the individual target words.
