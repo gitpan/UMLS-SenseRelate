@@ -1,5 +1,5 @@
 # UMLS::SenseRelate::TargetWord
-# (Last Updated $Id: TargetWord.pm,v 1.36 2013/06/20 17:38:44 btmcinnes Exp $)
+# (Last Updated $Id: TargetWord.pm,v 1.37 2013/07/24 09:25:58 btmcinnes Exp $)
 #
 # Perl module that performs SenseRelate style target word WSD
 #
@@ -307,7 +307,6 @@ sub assignSense {
 
 		if($aggregator eq "orness" || $aggregator eq "andness") { 
 		    $value  = $value / $sum; 
-		    print STDERR "$value $n $termcounter\n";
 		    $sensescore += ( ($n-$termcounter) * $value ); 
 		}
 		elsif($aggregator eq "max") { 

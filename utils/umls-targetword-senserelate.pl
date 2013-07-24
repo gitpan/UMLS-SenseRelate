@@ -143,6 +143,9 @@ available aggregators are:
     1. max - the maximum similarity score
     2. avg - the average similarity score (default)
     3. orness - \frac{1}{(n-1)} Sum_{i=1}^{n} (n-i)w_{i} 
+    4. andness - 1-orness
+    5. disp
+    6. closeness
 
 =head3 --restrict 
 
@@ -1868,7 +1871,7 @@ sub showHelp() {
 #  function to output the version number
 ##############################################################################
 sub showVersion {
-    print '$Id: umls-targetword-senserelate.pl,v 1.22 2013/07/19 19:46:48 btmcinnes Exp $';
+    print '$Id: umls-targetword-senserelate.pl,v 1.23 2013/07/24 09:25:58 btmcinnes Exp $';
     print "\nCopyright (c) 2010-2012, Ted Pedersen & Bridget McInnes\n";
 }
 

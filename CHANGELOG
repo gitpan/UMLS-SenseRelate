@@ -1,6 +1,9 @@
 NAME
     UMLS::SenseRelate CHANGES
 
+  Changes from version 0.27 to 0.29
+    1. added three additional aggregators (andness, disp and closeness)
+
   Changes from version 0.25 to 0.27
     1. added two additional aggregators (orness and max)
 
